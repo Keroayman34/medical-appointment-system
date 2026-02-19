@@ -1,9 +1,8 @@
 import jwt from "jsonwebtoken";
 
-// Middleware to protect routes (check if user is logged in)
 export const protect = (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1]; // "Bearer TOKEN"
+    const token = req.headers.authorization?.split(" ")[1]; 
 
     if (!token) {
       return res.status(401).json({ message: "Not authorized, no token" });
@@ -11,7 +10,6 @@ export const protect = (req, res, next) => {
 
     const decoded = jwt.verify(token, "SECRET_KEY");
 
-    // Attach user data to request
     req.user = decoded;
 
     next();
@@ -20,7 +18,6 @@ export const protect = (req, res, next) => {
   }
 };
 
-// Middleware to allow only specific roles
 export const allowRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {

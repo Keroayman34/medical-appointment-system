@@ -1,6 +1,5 @@
 import Joi from "joi";
 
-// Validation schema for adding availability
 export const addAvailabilitySchema = Joi.object({
   day: Joi.string().required().messages({
     "any.required": "Day is required",

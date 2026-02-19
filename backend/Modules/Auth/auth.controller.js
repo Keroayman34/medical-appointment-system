@@ -1,21 +1,17 @@
 import jwt from "jsonwebtoken";
-import { User } from "../../Database/Models/user.model.js";
-
-// Generate JWT token
+import User from "../../Database/Models/user.model.js";
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
-    "SECRET_KEY", // later move to .env
+    "SECRET_KEY",
     { expiresIn: "7d" },
   );
 };
 
-// Register new user
 export const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
@@ -25,7 +21,7 @@ export const register = async (req, res) => {
       name,
       email,
       password,
-      role, // admin / doctor / patient
+      role, 
     });
 
     const token = generateToken(user);
@@ -46,18 +42,15 @@ export const register = async (req, res) => {
   }
 };
 
-// Login user
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });

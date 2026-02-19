@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../Database/Models/user.model.js";
 
-// Protect routes (check if user is logged in)
 export const protect = async (req, res, next) => {
   try {
     let token;

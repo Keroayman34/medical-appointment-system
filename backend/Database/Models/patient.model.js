@@ -1,29 +1,25 @@
 import mongoose from "mongoose";
 
-// Patient profile is linked to a User
 const patientSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // One profile per user
+      unique: true,
     },
 
-    phone: {
-      type: String,
-    },
+    phone: String,
 
-    age: {
-      type: Number,
-    },
+    age: Number,
 
     gender: {
       type: String,
       enum: ["male", "female"],
     },
+
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export const Patient = mongoose.model("Patient", patientSchema);

@@ -1,13 +1,11 @@
 import { Availability } from "../../Database/Models/availability.model.js";
 import { Doctor } from "../../Database/Models/doctor.model.js";
 
-// Doctor adds availability
 export const addAvailability = async (req, res) => {
   try {
-    const userId = req.user._id; // from token
+    const userId = req.user._id; 
     const { day, from, to } = req.body;
 
-    // Find doctor profile by user id
     const doctor = await Doctor.findOne({ user: userId });
     if (!doctor) {
       return res.status(404).json({ message: "Doctor profile not found" });
@@ -30,7 +28,6 @@ export const addAvailability = async (req, res) => {
   }
 };
 
-// Get availability for a doctor
 export const getDoctorAvailability = async (req, res) => {
   try {
     const { doctorId } = req.params;
