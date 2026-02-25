@@ -1,27 +1,33 @@
 import jwt from "jsonwebtoken";
+import { config } from "../../Config/env.js";
 import User from "../../Database/Models/user.model.js";
+
+// Helper function to generate JWT token
 const generateToken = (user) => {
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    "SECRET_KEY",
-    { expiresIn: "7d" },
-  );
+  return jwt.sign({ _id: user._id, role: user.role }, config.JWT_SECRET, {
+    expiresIn: "7d",
+  });
 };
 
-export const register = async (req, res) => {
+// @desc    Register new user
+// @route   POST /auth/register
+// @access  Public
+export const register = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
+      const error = new Error("Email already registered");
+      error.statusCode = 400;
+      return next(error);
     }
 
     const user = await User.create({
       name,
       email,
       password,
-      role, 
+      role,
     });
 
     const token = generateToken(user);
@@ -37,23 +43,29 @@ export const register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Registration failed" });
+    next(error); // forward error to global error handler
   }
 };
 
-export const login = async (req, res) => {
+// @desc    Login user
+// @route   POST /auth/login
+// @access  Public
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      const error = new Error("Invalid email or password");
+      error.statusCode = 400;
+      return next(error);
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      const error = new Error("Invalid email or password");
+      error.statusCode = 400;
+      return next(error);
     }
 
     const token = generateToken(user);
@@ -69,7 +81,6 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Login failed" });
+    next(error); // forward error to global error handler
   }
 };

@@ -1,19 +1,20 @@
 import { Patient } from "../../Database/Models/patient.model.js";
 
-// Create patient profile (only for users with role = "patient")
-export const createPatientProfile = async (req, res) => {
+// @desc    Create patient profile (only for users with role = "patient")
+// @route   POST /patients
+// @access  Patient
+export const createPatientProfile = async (req, res, next) => {
   try {
     // Get user id from JWT (set by auth middleware)
     const userId = req.user.id || req.user._id;
-
     const { age, gender, phone } = req.body;
 
     // Check if patient profile already exists
     const existingProfile = await Patient.findOne({ user: userId });
     if (existingProfile) {
-      return res.status(400).json({
-        message: "Patient profile already exists",
-      });
+      const error = new Error("Patient profile already exists");
+      error.statusCode = 400;
+      return next(error);
     }
 
     // Create new patient profile
@@ -29,16 +30,14 @@ export const createPatientProfile = async (req, res) => {
       patient,
     });
   } catch (error) {
-    console.error("Create patient profile error:", error);
-    res.status(500).json({
-      message: "Failed to create patient profile",
-      error: error.message,
-    });
+    next(error); // forward to global error handler
   }
 };
 
-// Get my patient profile
-export const getMyPatientProfile = async (req, res) => {
+// @desc    Get my patient profile
+// @route   GET /patients/me
+// @access  Patient
+export const getMyPatientProfile = async (req, res, next) => {
   try {
     const userId = req.user.id || req.user._id;
 
@@ -48,19 +47,15 @@ export const getMyPatientProfile = async (req, res) => {
     );
 
     if (!patient) {
-      return res.status(404).json({
-        message: "Patient profile not found",
-      });
+      const error = new Error("Patient profile not found");
+      error.statusCode = 404;
+      return next(error);
     }
 
     res.status(200).json({
       patient,
     });
   } catch (error) {
-    console.error("Get patient profile error:", error);
-    res.status(500).json({
-      message: "Failed to get patient profile",
-      error: error.message,
-    });
+    next(error); // forward to global error handler
   }
 };

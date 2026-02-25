@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
+import { config } from "../Config/env.js";
 
-export const dbConnection = async () => {
-  try {
-    await mongoose.connect("mongodb://127.0.0.1:27017/MedicalDB");
-    console.log("Database connected successfully");
-  } catch (error) {
-    console.error("Database connection failed:", error);
-    process.exit(1);
-  }
+export const dbConnection = () => {
+  return mongoose
+    .connect(config.DB_URL)
+    .then(() => {
+      console.log("Database connected");
+    })
+    .catch((err) => {
+      console.error("DB connection error:", err);
+    });
 };

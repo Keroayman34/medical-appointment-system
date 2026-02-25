@@ -1,27 +1,61 @@
 import jwt from "jsonwebtoken";
+import { config } from "../Config/env.js";
+import User from "../Database/Models/user.model.js";
 
-export const protect = (req, res, next) => {
+// Protect routes: check JWT and load user
+export const protect = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1]; 
+    let token;
 
-    if (!token) {
-      return res.status(401).json({ message: "Not authorized, no token" });
+    // Check Authorization header: "Bearer TOKEN"
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
     }
 
-    const decoded = jwt.verify(token, "SECRET_KEY");
+    if (!token) {
+      const err = new Error("Not authorized, no token");
+      err.statusCode = 401;
+      return next(err);
+    }
 
-    req.user = decoded;
+    // Verify token
+    const decoded = jwt.verify(token, config.JWT_SECRET);
 
+    // Get user from DB
+    const user = await User.findById(decoded._id).select("-password");
+
+    if (!user) {
+      const err = new Error("User not found");
+      err.statusCode = 401;
+      return next(err);
+    }
+
+    if (!user.isActive) {
+      const err = new Error("User is blocked");
+      err.statusCode = 403;
+      return next(err);
+    }
+
+    // Attach user to request
+    req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    error.statusCode = 401;
+    error.message = "Not authorized, token failed";
+    next(error);
   }
 };
 
+// Allow only specific roles
 export const allowRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Forbidden: Access denied" });
+      const err = new Error("Access denied");
+      err.statusCode = 403;
+      return next(err);
     }
     next();
   };

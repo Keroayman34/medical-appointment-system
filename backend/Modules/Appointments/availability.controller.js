@@ -1,16 +1,23 @@
 import { Availability } from "../../Database/Models/availability.model.js";
-import { Doctor } from "../../Database/Models/doctor.model.js";
+import Doctor from "../../Database/Models/doctor.model.js";
 
-export const addAvailability = async (req, res) => {
+// @desc    Add availability (Doctor only)
+// @route   POST /availability
+// @access  Doctor
+export const addAvailability = async (req, res, next) => {
   try {
-    const userId = req.user._id; 
+    const userId = req.user._id;
     const { day, from, to } = req.body;
 
+    // 1) Check doctor profile exists
     const doctor = await Doctor.findOne({ user: userId });
     if (!doctor) {
-      return res.status(404).json({ message: "Doctor profile not found" });
+      const error = new Error("Doctor profile not found");
+      error.statusCode = 404;
+      return next(error);
     }
 
+    // 2) Create availability
     const availability = await Availability.create({
       doctor: doctor._id,
       day,
@@ -23,12 +30,14 @@ export const addAvailability = async (req, res) => {
       availability,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to add availability" });
+    next(error);
   }
 };
 
-export const getDoctorAvailability = async (req, res) => {
+// @desc    Get doctor availability
+// @route   GET /availability/:doctorId
+// @access  Public
+export const getDoctorAvailability = async (req, res, next) => {
   try {
     const { doctorId } = req.params;
 
@@ -36,7 +45,6 @@ export const getDoctorAvailability = async (req, res) => {
 
     res.json({ availability });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to get availability" });
+    next(error);
   }
 };

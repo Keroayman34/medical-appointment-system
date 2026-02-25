@@ -9,25 +9,41 @@ const doctorSchema = new mongoose.Schema(
       unique: true,
     },
 
+    //  Link doctor to Specialty collection instead of string
     specialty: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Specialty",
       required: true,
     },
 
-    bio: String,
+    bio: {
+      type: String,
+      default: "",
+    },
 
-    phone: String,
+    phone: {
+      type: String,
+      default: "",
+    },
 
-    fees: Number,
+    fees: {
+      type: Number,
+      default: 0,
+    },
 
-    experienceYears: Number,
+    experienceYears: {
+      type: Number,
+      default: 0,
+    },
 
+    // Admin can approve or reject doctor
     isApproved: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const Doctor = mongoose.model("Doctor", doctorSchema);
+const Doctor = mongoose.model("Doctor", doctorSchema);
+export default Doctor;

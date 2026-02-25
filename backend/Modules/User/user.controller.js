@@ -1,67 +1,64 @@
-import User from "../../Database/Models/user.model.js";import { Doctor } from "../../Database/Models/doctor.model.js";
-import { Patient } from "../../Database/Models/patient.model.js";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import sendEmail from "../../Database/Email/Email.js";
-import catchError from "../../Middlewares/catchError.js";
-const signup = catchError(async (req, res) => {
-  const { name, email, password, role } = req.body;
+import User from "../../Database/Models/user.model.js";
 
-  const hashedPass = bcrypt.hashSync(password, 8);
-
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPass,
-    role,
-  });
-
-  if (role === "doctor") {
-    await Doctor.create({ user: user._id, specialty: "", bio: "", phone: "" });
-  } else if (role === "patient") {
-    await Patient.create({ user: user._id, phone: "", age: null, gender: "" });
+// Admin: Get all users
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json({ users });
+  } catch (error) {
+    next(error);
   }
+};
 
-  sendEmail(email);
+// Get my profile
+export const getMyProfile = async (req, res, next) => {
+  try {
+    res.json({ user: req.user });
+  } catch (error) {
+    next(error);
+  }
+};
 
-  user.password = undefined;
-  res.status(201).json({ message: "Account created. Please verify your email.", data: user });
-});
+// Admin: Block or Unblock user
+export const toggleBlockUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-const signin = catchError(async (req, res) => {
-  const { email, password } = req.body;
+    const user = await User.findById(id);
+    if (!user) {
+      const err = new Error("User not found");
+      err.statusCode = 404;
+      return next(err);
+    }
 
-  const user = await User.findOne({ email }).select("+password");
-  if (!user) return res.status(404).json({ message: "User not found. Please sign up!" });
+    user.isActive = !user.isActive;
+    await user.save();
 
-  const match = bcrypt.compareSync(password, user.password);
-  if (!match) return res.status(422).json({ message: "Invalid password!" });
+    res.json({
+      message: user.isActive
+        ? "User unblocked successfully"
+        : "User blocked successfully",
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-  if (!user.isConfirmed) return res.status(401).json({ message: "Please verify your email first!" });
+// Admin: Delete user
+export const deleteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  const token = jwt.sign({ _id: user._id, role: user.role, name: user.name }, "nana", { expiresIn: "1d" });
-  user.password = undefined;
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      const err = new Error("User not found");
+      err.statusCode = 404;
+      return next(err);
+    }
 
-  res.status(200).json({ message: "Welcome back!", data: user, token });
-});
-
-const verifyAccount = catchError(async (req, res) => {
-  const token = req.params.email;
-  jwt.verify(token, "myEmail", async (err, decodedEmail) => {
-    if (err) return res.status(401).json({ message: "Invalid token" });
-
-    await User.findOneAndUpdate({ email: decodedEmail }, { isConfirmed: true });
-    res.status(200).json({ message: "Account verified successfully" });
-  });
-});
-
-const deleteUser = catchError(async (req, res) => {
-  const id = req.params.id;
-  const deletedUser = await User.findByIdAndDelete(id);
-  if (!deletedUser) return res.status(404).json({ message: "User not found" });
-
-  await deletedUser.deleteOne();
-  res.status(200).json({ message: "Deleted user", data: deletedUser });
-});
-
-export { signup, signin, verifyAccount, deleteUser };
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};

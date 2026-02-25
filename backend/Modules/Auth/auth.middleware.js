@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
-import { User } from "../Database/Models/user.model.js";
+import { config } from "../Config/env.js";
+import User from "../Database/Models/user.model.js";
 
 export const protect = async (req, res, next) => {
   try {
@@ -16,14 +17,16 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Not authorized, no token" });
     }
 
-    const decoded = jwt.verify(token, "SECRET_KEY");
+    const decoded = jwt.verify(token, config.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select("-password");
+    // NOTE: we use decoded._id because that's what we signed in the token
+    const user = await User.findById(decoded._id).select("-password");
+
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    if (!user.isActive) {
+    if (user.isActive === false) {
       return res.status(403).json({ message: "User is blocked" });
     }
 
