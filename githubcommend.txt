@@ -1,0 +1,19 @@
+git add .
+git commit -m "Initial commit without node_modules"
+git push origin main
+
+git pull origin main --rebase
+git push origin main
+
+git pull origin main
+
+npm i express nodemon bcrypt mongoose
+
+to virfy install
+
+npm install joi
+
+and
+
+npm i nodemailer 
+

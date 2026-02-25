@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+<<<<<<< HEAD
 // Validation for booking an appointment
 export const bookAppointmentSchema = Joi.object({
   doctorId: Joi.string().hex().length(24).required(), // Mongo ObjectId
@@ -15,3 +16,12 @@ export const updateStatusSchema = Joi.object({
     .valid("pending", "confirmed", "cancelled", "completed")
     .required(),
 });
+=======
+export const createAppointmentValidation = Joi.object({
+  doctor: Joi.string().hex().length(24).required(),
+  patient: Joi.string().hex().length(24).required(),
+  date: Joi.date().required(),
+  startTime: Joi.string().required(),
+  endTime: Joi.string().required(),
+});
+>>>>>>> 1d67657 (update appointment validation and gitignore)
