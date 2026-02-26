@@ -12,6 +12,15 @@ const appointmentSchema = new mongoose.Schema(
       ref: "Patient",
       required: true,
     },
+    patientName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    patientUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     date: {
       type: Date,
       required: true,
@@ -38,6 +47,10 @@ const appointmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    doctorUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     consultationNotes: {
       type: String,
       default: "",
@@ -47,14 +60,13 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-appointmentSchema.pre("validate", function setSlotDate(next) {
+appointmentSchema.pre("validate", function setSlotDate() {
   if (this.date) {
     const parsedDate = new Date(this.date);
     if (!Number.isNaN(parsedDate.getTime())) {
       this.slotDate = parsedDate.toISOString().split("T")[0];
     }
   }
-  next();
 });
 
 appointmentSchema.index(

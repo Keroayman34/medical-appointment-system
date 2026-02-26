@@ -169,7 +169,7 @@ export const deleteDoctor = createAsyncThunk(
     try {
       const { auth } = getState();
       const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-      await axios.delete(`${API_BASE_URL}/delete-doctor/${docId}`, config);
+      await axios.delete(`${DOCTOR_API}/${docId}`, config);
       return docId;
     } catch (error) {
       return rejectWithValue(error.response.data.message);

@@ -3,14 +3,19 @@ import Doctor from "../../Database/Models/doctor.model.js";
 import { Patient } from "../../Database/Models/patient.model.js";
 import { notifyAppointmentParticipants } from "../../Utils/notification.service.js";
 
+const SLOT_BOOKED_MESSAGE = "المعاد محجوز";
+
 const isDuplicateSlotError = (error) => {
+  if (!error || error.code !== 11000) return false;
+
+  const keyPattern = error.keyPattern || {};
+  const indexName = String(error?.message || "");
+
   return (
-    error &&
-    error.code === 11000 &&
-    error.keyPattern &&
-    error.keyPattern.doctor === 1 &&
-    error.keyPattern.slotDate === 1 &&
-    error.keyPattern.startTime === 1
+    (keyPattern.doctor === 1 &&
+      keyPattern.slotDate === 1 &&
+      keyPattern.startTime === 1) ||
+    indexName.includes("doctor_1_slotDate_1_startTime_1")
   );
 };
 
@@ -81,6 +86,12 @@ export const bookAppointment = async (req, res, next) => {
       });
     }
 
+    if (!doctor.isApproved) {
+      return res.status(403).json({
+        message: "Doctor not approved yet",
+      });
+    }
+
     let patient = await Patient.findOne({ user: userId });
     if (!patient) {
       patient = await Patient.create({
@@ -103,13 +114,16 @@ export const bookAppointment = async (req, res, next) => {
 
     if (conflict) {
       return res.status(400).json({
-        message: "Time slot already booked",
+        message: SLOT_BOOKED_MESSAGE,
       });
     }
 
     const appointment = await Appointment.create({
       patient: patient._id,
+      patientName: req.user.name || "",
+      patientUser: userId,
       doctor: doctor._id,
+      doctorUser: doctor.user,
       date,
       slotDate,
       startTime,
@@ -135,7 +149,7 @@ export const bookAppointment = async (req, res, next) => {
   } catch (error) {
     if (isDuplicateSlotError(error)) {
       return res.status(409).json({
-        message: "Time slot already booked",
+        message: SLOT_BOOKED_MESSAGE,
       });
     }
 
@@ -326,7 +340,7 @@ export const rescheduleAppointment = async (req, res, next) => {
 
     if (conflict) {
       return res.status(400).json({
-        message: "Time slot already booked",
+        message: SLOT_BOOKED_MESSAGE,
       });
     }
 
@@ -355,7 +369,7 @@ export const rescheduleAppointment = async (req, res, next) => {
   } catch (error) {
     if (isDuplicateSlotError(error)) {
       return res.status(409).json({
-        message: "Time slot already booked",
+        message: SLOT_BOOKED_MESSAGE,
       });
     }
 

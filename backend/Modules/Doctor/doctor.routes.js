@@ -7,6 +7,7 @@ import {
   getPendingDoctors,
   approveDoctor,
   rejectDoctor,
+  deleteDoctorByAdmin,
 } from "./doctor.controller.js";
 import {
   protect,
@@ -29,5 +30,7 @@ router.get("/pending", protect, allowSuperAdmin(), getPendingDoctors);
 router.patch("/:id/approve", protect, allowSuperAdmin(), approveDoctor);
 
 router.patch("/:id/reject", protect, allowSuperAdmin(), rejectDoctor);
+
+router.delete("/:id", protect, allowRoles("admin"), deleteDoctorByAdmin);
 
 export default router;

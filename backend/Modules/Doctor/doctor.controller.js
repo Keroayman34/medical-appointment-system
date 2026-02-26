@@ -2,6 +2,8 @@ import Doctor from "../../Database/Models/doctor.model.js";
 import Specialty from "../../Database/Models/specialty.model.js";
 import mongoose from "mongoose";
 import User from "../../Database/Models/user.model.js";
+import { Availability } from "../../Database/Models/availability.model.js";
+import { Appointment } from "../../Database/Models/appointment.model.js";
 import { sendDoctorApprovalEmail } from "../../Utils/sendEmail.js";
 
 export const createDoctorProfile = async (req, res, next) => {
@@ -287,6 +289,34 @@ export const rejectDoctor = async (req, res, next) => {
     }
 
     res.status(200).json({ message: "Doctor rejected", doctor });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteDoctorByAdmin = async (req, res, next) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id).populate("user", "_id");
+
+    if (!doctor) {
+      const error = new Error("Doctor not found");
+      error.statusCode = 404;
+      return next(error);
+    }
+
+    if (doctor.user?._id) {
+      await User.findOneAndDelete({ _id: doctor.user._id });
+    } else {
+      await Promise.all([
+        Availability.deleteMany({ doctor: doctor._id }),
+        Appointment.deleteMany({ doctor: doctor._id }),
+      ]);
+      await Doctor.findByIdAndDelete(doctor._id);
+    }
+
+    return res.status(200).json({
+      message: "Doctor deleted successfully",
+    });
   } catch (error) {
     next(error);
   }
