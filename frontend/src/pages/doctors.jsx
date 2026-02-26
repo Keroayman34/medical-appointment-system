@@ -63,7 +63,7 @@ const Doctors = () => {
                             <img
                                 onClick={() => navg(`/appointment/${item._id}`)}
                                 className="w-full h-52 object-cover bg-indigo-50"
-                                src={item?.user?.image || asts.doc1}
+                                src={item?.user?.image || asts.doc}
                                 alt={item?.user?.name || 'Doctor'}
                             />
                             <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm ${item?.isApproved ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-700'}`}>

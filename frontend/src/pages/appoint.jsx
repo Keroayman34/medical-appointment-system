@@ -118,7 +118,7 @@ const Appoint = () => {
             <div className="flex flex-col sm:flex-row gap-4">
                 <div>
                     {/* استخدمنا الصورة من السيرفر أو صورة افتراضية */}
-                    <img className="w-full sm:max-w-72 rounded-lg bg-main" src={selectedDoctor.image || asts.doc1} alt="" />
+                    <img className="w-full sm:max-w-72 rounded-lg bg-main" src={selectedDoctor.image || asts.doc} alt="" />
                 </div>
 
                 <div className="flex-1 border border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sm:mx-0 mt-[-80px] sm:mt-0">
