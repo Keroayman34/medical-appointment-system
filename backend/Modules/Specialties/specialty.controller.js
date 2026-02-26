@@ -1,13 +1,10 @@
 import Specialty from "../../Database/Models/specialty.model.js";
 
-// @desc    Create new specialty (Admin only)
-// @route   POST /specialties
-// @access  Admin
+
 export const createSpecialty = async (req, res, next) => {
   try {
     const { name, description } = req.body;
 
-    // Check if specialty already exists
     const existing = await Specialty.findOne({ name });
     if (existing) {
       const error = new Error("Specialty already exists");
@@ -29,9 +26,6 @@ export const createSpecialty = async (req, res, next) => {
   }
 };
 
-// @desc    Get all specialties (Public)
-// @route   GET /specialties
-// @access  Public
 export const getAllSpecialties = async (req, res, next) => {
   try {
     const specialties = await Specialty.find({ isActive: true });
@@ -41,9 +35,6 @@ export const getAllSpecialties = async (req, res, next) => {
   }
 };
 
-// @desc    Update specialty (Admin only)
-// @route   PUT /specialties/:id
-// @access  Admin
 export const updateSpecialty = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -71,9 +62,6 @@ export const updateSpecialty = async (req, res, next) => {
   }
 };
 
-// @desc    Delete specialty (Admin only)
-// @route   DELETE /specialties/:id
-// @access  Admin
 export const deleteSpecialty = async (req, res, next) => {
   try {
     const { id } = req.params;

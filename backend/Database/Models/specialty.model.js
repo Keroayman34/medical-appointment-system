@@ -21,7 +21,6 @@ const specialtySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Unique + Case Insensitive Index
 specialtySchema.index(
   { name: 1 },
   { unique: true, collation: { locale: "en", strength: 2 } }

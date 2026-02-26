@@ -8,15 +8,15 @@ const availabilitySchema = new mongoose.Schema(
       required: true,
     },
     day: {
-      type: String, // e.g. "Sunday", "Monday"
+      type: String, 
       required: true,
     },
     from: {
-      type: String, // e.g. "09:00"
+      type: String, 
       required: true,
     },
     to: {
-      type: String, // e.g. "17:00"
+      type: String, 
       required: true,
     },
   },

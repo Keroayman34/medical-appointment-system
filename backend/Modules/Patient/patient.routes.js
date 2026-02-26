@@ -10,13 +10,10 @@ import { updatePatientProfileSchema } from "./patient.validation.js";
 
 const router = express.Router();
 
-// Create patient profile (only for role = patient)
 router.post("/", protect, allowRoles("patient"), createPatientProfile);
 
-// Get my patient profile
 router.get("/me", protect, allowRoles("patient"), getMyPatientProfile);
 
-// Update my patient profile
 router.patch(
   "/me",
   protect,

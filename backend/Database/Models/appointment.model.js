@@ -18,11 +18,11 @@ const appointmentSchema = new mongoose.Schema(
     },
     startTime: {
       type: String,
-      required: true, // e.g. "10:00"
+      required: true, 
     },
     endTime: {
       type: String,
-      required: true, // e.g. "10:30"
+      required: true, 
     },
     status: {
       type: String,
@@ -42,7 +42,6 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Prevent double booking: same doctor, same date, same start time
 appointmentSchema.index({ doctor: 1, date: 1, startTime: 1 }, { unique: true });
 
 export const Appointment = mongoose.model("Appointment", appointmentSchema);

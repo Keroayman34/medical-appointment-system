@@ -7,7 +7,7 @@ export const validate = (schema) => {
 
       const err = new Error("Validation error");
       err.statusCode = 400;
-      err.details = messages; // optional: extra info
+      err.details = messages;
 
       return next(err);
     }

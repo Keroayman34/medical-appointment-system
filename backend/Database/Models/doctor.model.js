@@ -9,7 +9,6 @@ const doctorSchema = new mongoose.Schema(
       unique: true,
     },
 
-    //  Link doctor to Specialty collection instead of string
     specialty: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Specialty",
@@ -43,7 +42,6 @@ const doctorSchema = new mongoose.Schema(
       default: 0,
     },
 
-    // Admin can approve or reject doctor
     isApproved: {
       type: Boolean,
       default: false,

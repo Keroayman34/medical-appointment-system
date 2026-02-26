@@ -2,12 +2,10 @@ import jwt from "jsonwebtoken";
 import { config } from "../Config/env.js";
 import User from "../Database/Models/user.model.js";
 
-// Protect routes: check JWT and load user
 export const protect = async (req, res, next) => {
   try {
     let token;
 
-    // Check Authorization header: "Bearer TOKEN"
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
@@ -21,10 +19,8 @@ export const protect = async (req, res, next) => {
       return next(err);
     }
 
-    // Verify token
     const decoded = jwt.verify(token, config.JWT_SECRET);
 
-    // Get user from DB
     const user = await User.findById(decoded._id).select("-password");
 
     if (!user) {
@@ -39,7 +35,6 @@ export const protect = async (req, res, next) => {
       return next(err);
     }
 
-    // Attach user to request
     req.user = user;
     next();
   } catch (error) {
@@ -49,7 +44,6 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// Allow only specific roles
 export const allowRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {

@@ -1,15 +1,9 @@
 import { Patient } from "../../Database/Models/patient.model.js";
-
-// @desc    Create patient profile (only for users with role = "patient")
-// @route   POST /patients
-// @access  Patient
 export const createPatientProfile = async (req, res, next) => {
   try {
-    // Get user id from JWT (set by auth middleware)
     const userId = req.user.id || req.user._id;
     const { age, gender, phone } = req.body;
 
-    // Check if patient profile already exists
     const existingProfile = await Patient.findOne({ user: userId });
     if (existingProfile) {
       const error = new Error("Patient profile already exists");
@@ -17,7 +11,6 @@ export const createPatientProfile = async (req, res, next) => {
       return next(error);
     }
 
-    // Create new patient profile
     const patient = await Patient.create({
       user: userId,
       age,
@@ -30,13 +23,10 @@ export const createPatientProfile = async (req, res, next) => {
       patient,
     });
   } catch (error) {
-    next(error); // forward to global error handler
+    next(error);
   }
 };
 
-// @desc    Get my patient profile
-// @route   GET /patients/me
-// @access  Patient
 export const getMyPatientProfile = async (req, res, next) => {
   try {
     const userId = req.user.id || req.user._id;
@@ -56,13 +46,10 @@ export const getMyPatientProfile = async (req, res, next) => {
       patient,
     });
   } catch (error) {
-    next(error); // forward to global error handler
+    next(error); 
   }
 };
 
-// @desc    Update my patient profile
-// @route   PATCH /patients/me
-// @access  Patient
 export const updateMyPatientProfile = async (req, res, next) => {
   try {
     const userId = req.user.id || req.user._id;
