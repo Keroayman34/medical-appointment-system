@@ -8,12 +8,24 @@ const generateToken = (user) => {
   });
 };
 
+const formatUserResponse = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  phone: user.phone || "",
+  address: user.address || "",
+  gender: user.gender || "male",
+  dob: user.dob || "",
+  image: user.image || "",
+});
+
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body || {};
+    const { name, email, password } = req.body || {};
 
-    if (!name || !email || !password || !role) {
-      const error = new Error("name, email, password and role are required");
+    if (!name || !email || !password) {
+      const error = new Error("name, email and password are required");
       error.statusCode = 400;
       return next(error);
     }
@@ -29,7 +41,7 @@ export const register = async (req, res, next) => {
       name,
       email,
       password,
-      role,
+      role: "patient",
     });
 
     const token = generateToken(user);
@@ -37,12 +49,7 @@ export const register = async (req, res, next) => {
     res.status(201).json({
       message: "User registered successfully",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: formatUserResponse(user),
     });
   } catch (error) {
     if (error?.code === 11000 && error?.keyPattern?.email === 1) {
@@ -85,12 +92,7 @@ export const login = async (req, res, next) => {
     res.json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: formatUserResponse(user),
     });
   } catch (error) {
     next(error);

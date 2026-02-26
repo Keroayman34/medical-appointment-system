@@ -18,7 +18,7 @@ router.get("/me", protect, allowRoles("doctor"), getMyDoctorProfile);
 
 router.patch("/me", protect, allowRoles("doctor"), updateMyDoctorProfile);
 
-router.get("/discover", protect, allowRoles("patient"), discoverDoctors);
+router.get("/discover", discoverDoctors);
 
 router.get("/pending", protect, allowRoles("admin"), getPendingDoctors);
 

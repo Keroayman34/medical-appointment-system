@@ -1,4 +1,7 @@
-import React,{useState , useSelector , useNavigate , useDispatch} from "react";
+import React, { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../redux/slices/authSlice";
 
 let Login = () => {
     const [email, setEmail] = useState("");
@@ -18,11 +21,12 @@ let Login = () => {
 
     return(
         <>
-        <form className="min-h-[80px] flex items-center">
+        <form onSubmit={handleSubmit} className="min-h-[80px] flex items-center">
             <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-zinc-600 text-sm shadow-lg">
-                <p className="text-2xl font-semibold">{state === "signUp" ? "Sign Up" : "Login"}</p>
+                <p className="text-2xl font-semibold">Login</p>
 
                 <p>please fill in all fields</p>
+                {error && <p className="text-red-500 text-xs">{error}</p>}
                 <div className="w-full">
 
                     <p>Email</p>
@@ -35,7 +39,9 @@ let Login = () => {
                     <input className="border border-zinc-100 rounded w-full p-2 mt-1 " type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required/>
 
                 </div>
-                <button className="bg-main text-white w-full py-2 rounded-md text-base">Login</button>
+                <button disabled={loading} className="bg-main text-white w-full py-2 rounded-md text-base">
+                    {loading ? "Logging in..." : "Login"}
+                </button>
                 <p className="text-center">Don't have an account? <span onClick={() => navigate("/register")} className="text-main cursor-pointer">Sign Up</span></p>
             </div>
         </form>

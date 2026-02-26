@@ -14,10 +14,11 @@ import Appoint from "./pages/appoint.jsx";
 import Register from "./pages/register.jsx";
 
 // استيراد صفحات الطبيب والأدمن
-import DoctorDashboard from "./pages/DoctorDashboard.jsx";
-import DoctorAppointments from "./pages/DoctorAppointments.jsx";
-import AddDoctor from "./pages/AddDoctor.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx"; 
+import DoctorDashboard from "./pages/doctorDashboard.jsx";
+import DoctorAppointments from "./pages/doctorAppointments.jsx";
+import DoctorProfile from "./pages/doctorProfile.jsx";
+import AddDoctor from "./pages/addDoctor.jsx";
+import AdminDashboard from "./pages/adminDasboard.jsx"; 
 
 // استيراد المكونات
 import Nav from "./components/Nav.jsx";

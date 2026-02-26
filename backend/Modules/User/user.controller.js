@@ -19,6 +19,54 @@ export const getMyProfile = async (req, res, next) => {
   }
 };
 
+export const updateMyProfile = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { name, email, phone, address, gender, dob, image } = req.body || {};
+
+    const user = await User.findById(userId);
+    if (!user) {
+      const err = new Error("User not found");
+      err.statusCode = 404;
+      return next(err);
+    }
+
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email;
+    if (phone !== undefined) user.phone = phone;
+    if (address !== undefined) user.address = address;
+    if (gender !== undefined) user.gender = gender;
+    if (dob !== undefined) user.dob = dob;
+    if (image !== undefined) user.image = image;
+
+    await user.save();
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        address: user.address,
+        gender: user.gender,
+        dob: user.dob,
+        image: user.image,
+      },
+    });
+  } catch (error) {
+    if (error?.code === 11000 && error?.keyPattern?.email === 1) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already registered",
+      });
+    }
+
+    next(error);
+  }
+};
+
 // Admin: Block or Unblock user
 export const toggleBlockUser = async (req, res, next) => {
   try {
@@ -62,4 +110,3 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
-

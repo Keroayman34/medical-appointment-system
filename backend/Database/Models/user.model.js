@@ -21,11 +21,11 @@ const userSchema = new mongoose.Schema(
     },
 
     password: {
-  type: String,
-  required: true,
-  minlength: 6,
-  select: false,
-},
+      type: String,
+      required: true,
+      minlength: 6,
+      select: false,
+    },
     role: {
       type: String,
       enum: ["admin", "doctor", "patient"],
@@ -35,6 +35,36 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    address: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+      default: "male",
+    },
+
+    dob: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    image: {
+      type: String,
+      default: "",
+      trim: true,
     },
   },
   { timestamps: true },
@@ -49,7 +79,6 @@ userSchema.pre("save", async function () {
 userSchema.methods.comparePassword = async function (plainPassword) {
   return await bcrypt.compare(plainPassword, this.password);
 };
-
 
 userSchema.post("findOneAndDelete", async function (deletedUser, next) {
   try {

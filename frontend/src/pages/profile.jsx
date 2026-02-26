@@ -5,12 +5,15 @@ import { asts } from "../assets/assets";
 
 const Profile = () => {
     const dispatch = useDispatch();
+    const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
     
     // جلب البيانات من Redux
     const { user, loading } = useSelector((state) => state.auth);
 
     // حالة التعديل
     const [editMode, setEditMode] = useState(false);
+    const [uploadError, setUploadError] = useState("");
 
     // حالة البيانات المحلية
     const [userData, setUserData] = useState({
@@ -18,15 +21,76 @@ const Profile = () => {
         email: user?.email || "",
         phone: user?.phone || "",
         address: user?.address || "",
-        gender: user?.gender || "Mail",
+        gender: user?.gender || "male",
         dob: user?.dob || "",
         img: user?.image || asts.prof 
     });
 
+    const handleImageUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadError("");
+
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            setUploadError("الصورة لازم تكون JPG أو PNG أو WEBP. اختاري صورة تانية.");
+            e.target.value = "";
+            return;
+        }
+
+        if (file.size > MAX_IMAGE_SIZE) {
+            setUploadError("حجم الصورة كبير (أقصى حاجة 2MB). اختاري صورة أصغر.");
+            e.target.value = "";
+            return;
+        }
+
+        const tempImage = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        tempImage.onload = () => {
+            if (tempImage.width < 120 || tempImage.height < 120) {
+                setUploadError("أبعاد الصورة صغيرة جدًا. اختاري صورة أوضح.");
+                URL.revokeObjectURL(objectUrl);
+                e.target.value = "";
+                return;
+            }
+
+            URL.revokeObjectURL(objectUrl);
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setUserData((prev) => ({ ...prev, img: reader.result }));
+            };
+            reader.readAsDataURL(file);
+        };
+
+        tempImage.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            setUploadError("الصورة غير صالحة. اختاري صورة تانية.");
+            e.target.value = "";
+        };
+
+        tempImage.src = objectUrl;
+    };
+
     // دالة حفظ التعديلات وإرسالها للسيرفر
-    const handleUpdate = () => {
-        dispatch(updateProfile(userData)); // نداء الأكشن عشان يحفظ في الداتابيز
-        setEditMode(false); // قفل وضع التعديل
+    const handleUpdate = async () => {
+        if (uploadError) return;
+
+        const payload = {
+            name: userData.name,
+            email: userData.email,
+            phone: userData.phone,
+            address: userData.address,
+            gender: userData.gender,
+            dob: userData.dob,
+            image: typeof userData.img === "string" ? userData.img : "",
+        };
+
+        const result = await dispatch(updateProfile(payload)); // نداء الأكشن عشان يحفظ في الداتابيز
+        if (result.meta.requestStatus === "fulfilled") {
+            setEditMode(false); // قفل وضع التعديل بعد نجاح الحفظ
+        }
     };
 
     if (!user) return <p className="text-center py-20">Please Login to see your profile.</p>;
@@ -37,10 +101,13 @@ const Profile = () => {
             <div className="flex items-center gap-4">
                 <img src={userData.img} alt="Profile" className="rounded-full w-24 h-24 object-cover"/>
                 {editMode && (
-                    <label className="cursor-pointer flex items-center gap-2 bg-main text-white px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300">
-                        Upload
-                        <input type="file" className="hidden" onChange={(e) => setUserData({ ...userData, img: e.target.files[0] }) }/>
-                    </label>
+                    <div className="flex flex-col gap-1">
+                        <label className="cursor-pointer flex items-center gap-2 bg-main text-white px-4 py-2 rounded-lg hover:scale-105 transition-all duration-300">
+                            Upload
+                            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload}/>
+                        </label>
+                        {uploadError && <p className="text-red-500 text-xs">{uploadError}</p>}
+                    </div>
                 )}
             </div>
 
@@ -83,8 +150,8 @@ const Profile = () => {
                     {
                         editMode
                         ? <select className="max-w-20 bg-gray-100 outline-none" value={userData.gender} onChange={(e) => setUserData({...userData, gender: e.target.value})}> 
-                            <option value="Mail">Mail</option>
-                            <option value="Female">Female</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
                         </select>
                         : <p className="text-gray-400">{userData.gender}</p>
                     }
