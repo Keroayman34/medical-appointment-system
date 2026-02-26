@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 // تأكد إنك ضفت cancelAppointment في الـ Slice بتاعك
-import { fetchDoctorAppointments, completeAppointment } from '../redux/slices/doctorSlice' 
+import { fetchDoctorAppointments, completeAppointment, cancelDoctorAppointment } from '../redux/slices/doctorSlice' 
 import { asts } from '../assets/assets'
 
 const DoctorAppointments = () => {
   const dispatch = useDispatch()
-  const { appointments, loading } = useSelector(state => state.doctor)
+  const { appointments, loading } = useSelector(state => state.doctors)
 
   useEffect(() => {
     dispatch(fetchDoctorAppointments())
@@ -15,6 +15,7 @@ const DoctorAppointments = () => {
   // دالة بسيطة لحساب السن من تاريخ الميلاد
   const calculateAge = (dob) => {
     if (!dob) return "N/A";
+    if (typeof dob === 'number') return dob;
     const today = new Date();
     const birthDate = new Date(dob);
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -46,27 +47,29 @@ const DoctorAppointments = () => {
               
               <div className='flex items-center gap-2'>
                 {/* استخدام صورة افتراضية لو المريض محطش صورة */}
-                <img className='w-8 h-8 rounded-full object-cover' src={item.userData?.image || asts.prof} alt="" />
-                <p className='text-zinc-800 font-medium'>{item.userData?.name || "Unknown Patient"}</p>
+                <img className='w-8 h-8 rounded-full object-cover' src={asts.prof} alt="" />
+                <p className='text-zinc-800 font-medium'>{item.patient?.user?.name || "Unknown Patient"}</p>
               </div>
 
               <div>
                 <p className='text-xs inline border border-main px-2 py-0.5 rounded-full text-main font-medium'>
-                  {item.payment ? 'Online' : 'Cash'}
+                  Cash
                 </p>
               </div>
 
               <div className='text-zinc-600'>
-                <p>{calculateAge(item.userData?.dob)} Years</p>
-                <p className='text-xs'>{item.slotDate}, {item.slotTime}</p>
+                <p>{calculateAge(item.patient?.age)} Years</p>
+                <p className='text-xs'>
+                  {new Date(item.date).toLocaleDateString('en-GB')}, {item.startTime}
+                </p>
               </div>
 
-              <p className='font-bold text-zinc-700'>${item.amount}</p>
+              <p className='font-bold text-zinc-700'>${item.doctor?.fees ?? '-'}</p>
               
               <div className='flex gap-2 items-center'>
-                {item.cancelled 
+                {item.status === 'cancelled' 
                   ? <p className='text-red-400 text-xs font-medium bg-red-50 px-2 py-1 rounded'>Cancelled</p>
-                  : item.isCompleted 
+                  : item.status === 'completed' 
                     ? <p className='text-green-500 text-xs font-medium bg-green-50 px-2 py-1 rounded'>Completed</p>
                     : <>
                         <img 
@@ -75,8 +78,8 @@ const DoctorAppointments = () => {
                           src={asts.tick_icon} 
                           alt="Complete" 
                         />
-                        {/* هنا ممكن تضيف دالة الـ Cancel لاحقاً */}
                         <img 
+                          onClick={() => dispatch(cancelDoctorAppointment(item._id))}
                           className='w-10 cursor-pointer p-2 bg-red-50 rounded-full hover:scale-110 transition-all' 
                           src={asts.cancel_icon} 
                           alt="Cancel" 

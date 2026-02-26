@@ -12,9 +12,23 @@ export const registerSchema = Joi.object({
 
   phone: Joi.string().trim().allow("").optional(),
 
+  address: Joi.string().trim().allow("").optional(),
+
   gender: Joi.string().valid("male", "female").optional(),
 
   age: Joi.number().min(0).max(130).optional(),
+
+  specialtyId: Joi.when("role", {
+    is: "doctor",
+    then: Joi.string().hex().length(24).required(),
+    otherwise: Joi.forbidden(),
+  }),
+
+  bio: Joi.string().trim().allow("").optional(),
+
+  fees: Joi.number().min(0).optional(),
+
+  experienceYears: Joi.number().min(0).optional(),
 });
 
 // Validation schema for user login

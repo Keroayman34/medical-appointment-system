@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchDoctorAppointments, completeAppointment } from '../redux/slices/doctorSlice.js'
+import { fetchDoctorAppointments, completeAppointment, cancelDoctorAppointment } from '../redux/slices/doctorSlice.js'
 import { asts } from '../assets/assets.js'
 import StatCard from '../components/statCard.jsx'
 import AppointmentRow from '../components/appointmentRow.jsx'
 
 const DoctorDashboard = () => {
     const dispatch = useDispatch()
-    const { appointments, loading } = useSelector(state => state.doctor)
+    const { appointments, loading } = useSelector(state => state.doctors)
 
     useEffect(() => {
         dispatch(fetchDoctorAppointments())
@@ -38,6 +38,7 @@ const DoctorDashboard = () => {
                             item={item} 
                             index={index} 
                             onComplete={(id) => dispatch(completeAppointment(id))}
+                            onCancel={(id) => dispatch(cancelDoctorAppointment(id))}
                         />
                     ))}
                 </div>

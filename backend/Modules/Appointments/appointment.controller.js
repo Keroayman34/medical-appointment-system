@@ -74,10 +74,13 @@ export const bookAppointment = async (req, res, next) => {
       });
     }
 
-    const patient = await Patient.findOne({ user: userId });
+    let patient = await Patient.findOne({ user: userId });
     if (!patient) {
-      return res.status(404).json({
-        message: "Patient profile not found",
+      patient = await Patient.create({
+        user: userId,
+        phone: req.user.phone || "",
+        gender: req.user.gender || "male",
+        age: req.user.age ?? null,
       });
     }
 
@@ -135,10 +138,13 @@ export const getMyAppointments = async (req, res, next) => {
     let filter = {};
 
     if (user.role === "patient") {
-      const patient = await Patient.findOne({ user: user._id });
+      let patient = await Patient.findOne({ user: user._id });
       if (!patient) {
-        return res.status(404).json({
-          message: "Patient profile not found",
+        patient = await Patient.create({
+          user: user._id,
+          phone: user.phone || "",
+          gender: user.gender || "male",
+          age: user.age ?? null,
         });
       }
       filter.patient = patient._id;

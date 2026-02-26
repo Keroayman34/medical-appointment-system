@@ -53,7 +53,7 @@ export const getMyDoctorProfile = async (req, res, next) => {
     const userId = req.user._id;
 
     const doctor = await Doctor.findOne({ user: userId })
-      .populate("user", "name email role")
+      .populate("user", "name email role image phone address gender age")
       .populate("specialty", "name description");
 
     if (!doctor) {
@@ -80,6 +80,10 @@ export const updateMyDoctorProfile = async (req, res, next) => {
       experienceYears,
       name,
       email,
+      image,
+      address,
+      gender,
+      age,
     } = req.body || {};
     const selectedSpecialtyId = specialtyId || specialty;
 
@@ -105,7 +109,15 @@ export const updateMyDoctorProfile = async (req, res, next) => {
     if (fees !== undefined) doctor.fees = fees;
     if (experienceYears !== undefined) doctor.experienceYears = experienceYears;
 
-    if (name !== undefined || email !== undefined) {
+    if (
+      name !== undefined ||
+      email !== undefined ||
+      image !== undefined ||
+      address !== undefined ||
+      gender !== undefined ||
+      age !== undefined ||
+      phone !== undefined
+    ) {
       const user = await User.findById(userId);
       if (!user) {
         const error = new Error("User not found");
@@ -115,6 +127,11 @@ export const updateMyDoctorProfile = async (req, res, next) => {
 
       if (name !== undefined) user.name = name;
       if (email !== undefined) user.email = email;
+      if (image !== undefined) user.image = image;
+      if (address !== undefined) user.address = address;
+      if (gender !== undefined) user.gender = gender;
+      if (age !== undefined) user.age = age;
+      if (phone !== undefined) user.phone = phone;
 
       await user.save();
     }
@@ -122,7 +139,7 @@ export const updateMyDoctorProfile = async (req, res, next) => {
     await doctor.save();
 
     const updatedDoctor = await Doctor.findById(doctor._id)
-      .populate("user", "name email role")
+      .populate("user", "name email role image phone address gender age")
       .populate("specialty", "name description");
 
     res.status(200).json({

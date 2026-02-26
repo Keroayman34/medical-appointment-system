@@ -73,7 +73,7 @@ const Nav = () => {
                                 )}
 
                                 {/* رابط مواعيد المريض يظهر للمريض فقط */}
-                                {user?.role === 'user' && (
+                                {user?.role === 'patient' && (
                                     <p onClick={() => navg('/my-appointments')} className="hover:bg-gray-100 p-3 rounded cursor-pointer">My Appointments</p>
                                 )}
 

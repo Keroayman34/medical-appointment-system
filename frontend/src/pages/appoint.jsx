@@ -19,7 +19,7 @@ const Appoint = () => {
     let dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     let [docSlots, setDocSlots] = useState([]);
     let [slotIndex, setSlotIndex] = useState(0);
-    let [slotTime, setSlotTime] = useState('');
+    let [selectedSlot, setSelectedSlot] = useState(null);
 
     // 3. جلب بيانات الدكتور عند فتح الصفحة
     useEffect(() => {
@@ -62,10 +62,22 @@ const Appoint = () => {
                 }
 
                 while (curuntDate < endTime) {
-                    let formatTime = curuntDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const slotStart = new Date(curuntDate);
+                    const slotEnd = new Date(curuntDate);
+                    slotEnd.setMinutes(slotEnd.getMinutes() + 30);
+
+                    const formatToHHmm = (timeDate) => {
+                        const hh = String(timeDate.getHours()).padStart(2, '0');
+                        const mm = String(timeDate.getMinutes()).padStart(2, '0');
+                        return `${hh}:${mm}`;
+                    };
+
+                    let formatTime = slotStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     slots.push({
-                        date: new Date(curuntDate),
-                        time: formatTime
+                        date: new Date(slotStart),
+                        displayTime: formatTime,
+                        startTime: formatToHHmm(slotStart),
+                        endTime: formatToHHmm(slotEnd),
                     });
                     curuntDate.setMinutes(curuntDate.getMinutes() + 30);
                 }
@@ -87,12 +99,13 @@ const Appoint = () => {
             alert("Please login to book an appointment");
             return navg('/login');
         }
-        if (!slotTime) return alert("Please select a time slot");
+        if (!selectedSlot) return alert("Please select a time slot");
 
         const appointmentData = {
-            doctor: docID,
-            date: docSlots[slotIndex][0].date,
-            startTime: slotTime,
+            doctorId: docID,
+            date: selectedSlot.date,
+            startTime: selectedSlot.startTime,
+            endTime: selectedSlot.endTime,
         };
         dispatch(bookAppointment(appointmentData));
     };
@@ -115,7 +128,7 @@ const Appoint = () => {
                     </p>
 
                     <div className="flex items-center gap-2 text-sm mt-1 text-gray-600">
-                        <p>{selectedDoctor.degree || 'MBBS'} - {selectedDoctor.specialty}</p>
+                        <p>{selectedDoctor.degree || 'MBBS'} - {selectedDoctor.specialty?.name || selectedDoctor.specialty || 'Specialty'}</p>
                         <button className="py-0.5 px-2 border text-xs rounded-full">{selectedDoctor.experienceYears} Years Exp</button>
                     </div>
 
@@ -154,10 +167,10 @@ const Appoint = () => {
                         docSlots[slotIndex].map((slot, index) => (
                             <p 
                                 key={index} 
-                                onClick={() => setSlotTime(slot.time)} 
-                                className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full cursor-pointer transition-all ${slot.time === slotTime ? 'bg-main text-white shadow-sm' : 'text-gray-400 border border-gray-200'}`} 
+                                onClick={() => setSelectedSlot(slot)} 
+                                className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full cursor-pointer transition-all ${selectedSlot?.startTime === slot.startTime ? 'bg-main text-white shadow-sm' : 'text-gray-400 border border-gray-200'}`} 
                             >
-                                {slot.time.toLowerCase()}
+                                {slot.displayTime.toLowerCase()}
                             </p>
                         ))
                     ) : (

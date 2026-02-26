@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
+import axios from "axios";
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -11,18 +13,33 @@ const Register = () => {
         password: "",
         role: "patient", 
         phone: "",
+        address: "",
         gender: "male",
         age: "",
         // Doctor specific fields
-        specialty: "",
-        experience: "",
-        about: "",
-        degree: "", 
+        specialtyId: "",
+        experienceYears: "",
+        bio: "",
+        fees: "",
     });
+    const [specialties, setSpecialties] = useState([]);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { loading, error } = useSelector((state) => state.auth);
+
+    useEffect(() => {
+        const loadSpecialties = async () => {
+            try {
+                const { data } = await axios.get('/api/specialties');
+                setSpecialties(data.specialties || []);
+            } catch {
+                setSpecialties([]);
+            }
+        };
+
+        loadSpecialties();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,8 +52,16 @@ const Register = () => {
         };
 
         if (formData.phone?.trim()) payload.phone = formData.phone.trim();
+        if (formData.address?.trim()) payload.address = formData.address.trim();
         if (formData.gender) payload.gender = formData.gender.toLowerCase();
         if (formData.age !== "") payload.age = Number(formData.age);
+
+        if (formData.role === "doctor") {
+            payload.specialtyId = formData.specialtyId;
+            payload.bio = formData.bio || "";
+            if (formData.experienceYears !== "") payload.experienceYears = Number(formData.experienceYears);
+            if (formData.fees !== "") payload.fees = Number(formData.fees);
+        }
 
         const resultAction = await dispatch(registerUser(payload));
 
@@ -95,6 +120,10 @@ const Register = () => {
                         <input className="border border-zinc-300 rounded-lg w-full p-2 mt-1" type="number" placeholder="25" value={formData.age} onChange={(e) => setFormData({...formData, age: e.target.value})} required />
                     </div>
                     <div>
+                        <p className="text-zinc-600 text-sm">Address</p>
+                        <input className="border border-zinc-300 rounded-lg w-full p-2 mt-1" type="text" placeholder="City, Area" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} required />
+                    </div>
+                    <div>
                         <p className="text-zinc-600 text-sm">Gender</p>
                         <select className="border border-zinc-300 rounded-lg w-full p-2 mt-1" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
                             <option value="male">Male</option>
@@ -110,19 +139,24 @@ const Register = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-zinc-600 text-sm">Specialty</p>
-                                <input className="border border-blue-200 rounded-lg w-full p-2 mt-1" type="text" placeholder="e.g. Cardiology" value={formData.specialty} onChange={(e) => setFormData({...formData, specialty: e.target.value})} required={formData.role === "doctor"} />
+                                <select className="border border-blue-200 rounded-lg w-full p-2 mt-1" value={formData.specialtyId} onChange={(e) => setFormData({...formData, specialtyId: e.target.value})} required={formData.role === "doctor"}>
+                                    <option value="">Select specialty</option>
+                                    {specialties.map((specialty) => (
+                                        <option key={specialty._id} value={specialty._id}>{specialty.name}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <p className="text-zinc-600 text-sm">Years of Experience</p>
-                                <input className="border border-blue-200 rounded-lg w-full p-2 mt-1" type="number" placeholder="e.g. 5" value={formData.experience} onChange={(e) => setFormData({...formData, experience: e.target.value})} required={formData.role === "doctor"} />
+                                <input className="border border-blue-200 rounded-lg w-full p-2 mt-1" type="number" placeholder="e.g. 5" value={formData.experienceYears} onChange={(e) => setFormData({...formData, experienceYears: e.target.value})} required={formData.role === "doctor"} />
                             </div>
-                            <div className="md:col-span-2">
-                                <p className="text-zinc-600 text-sm">Medical Degree</p>
-                                <input className="border border-blue-200 rounded-lg w-full p-2 mt-1" type="text" placeholder="e.g. MBBS, MD" value={formData.degree} onChange={(e) => setFormData({...formData, degree: e.target.value})} />
+                            <div>
+                                <p className="text-zinc-600 text-sm">Fees</p>
+                                <input className="border border-blue-200 rounded-lg w-full p-2 mt-1" type="number" placeholder="e.g. 200" value={formData.fees} onChange={(e) => setFormData({...formData, fees: e.target.value})} />
                             </div>
                             <div className="md:col-span-2">
                                 <p className="text-zinc-600 text-sm">Bio / About</p>
-                                <textarea rows="2" className="border border-blue-200 rounded-lg w-full p-2 mt-1" placeholder="Briefly describe your medical background" value={formData.about} onChange={(e) => setFormData({...formData, about: e.target.value})} />
+                                <textarea rows="2" className="border border-blue-200 rounded-lg w-full p-2 mt-1" placeholder="Briefly describe your medical background" value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} />
                             </div>
                         </div>
                     </div>

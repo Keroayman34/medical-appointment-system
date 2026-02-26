@@ -59,15 +59,15 @@ export const updateProfile = createAsyncThunk(
           Authorization: `Bearer ${auth.token}`, // مطلوب بواسطة protect middleware
         },
       };
-      const response = await axios.patch(
-        `${API_URL}/update-me`,
-        formData,
-        config,
-      );
+      const response = await axios.patch(`${USER_API}/me`, formData, config);
       localStorage.setItem("user", JSON.stringify(response.data.user));
       return response.data.user;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Update failed");
+      return rejectWithValue(
+        error.response?.data?.details?.[0] ||
+          error.response?.data?.message ||
+          "Update failed",
+      );
     }
   },
 );

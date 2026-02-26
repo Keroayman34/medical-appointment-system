@@ -35,12 +35,7 @@ const doctorSchema = new mongoose.Schema(
       default: 0,
     },
 
-    rating: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0,
-    },
+  
 
     isApproved: {
       type: Boolean,

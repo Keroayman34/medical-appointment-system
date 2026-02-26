@@ -7,7 +7,7 @@ const Appointment = () => {
     const dispatch = useDispatch();
     
     // جلب البيانات من Redux
-    const { myAppointments, loading } = useSelector((state) => state.appointments);
+    const { myAppointments, loading } = useSelector((state) => state.appointment);
 
     // 2. جلب المواعيد بمجرد فتح الصفحة
     useEffect(() => {
