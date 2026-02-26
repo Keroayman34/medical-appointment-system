@@ -1,22 +1,83 @@
 import { Appointment } from "../../Database/Models/appointment.model.js";
 import Doctor from "../../Database/Models/doctor.model.js";
-// @desc    Book a new appointment (Patient only)
-// @route   POST /appointments
-// @access  Patient
+import { Patient } from "../../Database/Models/patient.model.js";
+import { sendAppointmentNotificationEmail } from "../../Utils/sendEmail.js";
+
+const isDuplicateSlotError = (error) => {
+  return (
+    error &&
+    error.code === 11000 &&
+    error.keyPattern &&
+    error.keyPattern.doctor === 1 &&
+    error.keyPattern.date === 1 &&
+    error.keyPattern.startTime === 1
+  );
+};
+
+const notifyAppointmentParties = async ({ appointmentId, action }) => {
+  const appointment = await Appointment.findById(appointmentId)
+    .populate({
+      path: "patient",
+      populate: { path: "user", select: "name email" },
+    })
+    .populate({
+      path: "doctor",
+      populate: { path: "user", select: "name email" },
+    });
+
+  if (!appointment) return;
+
+  const patientEmail = appointment.patient?.user?.email;
+  const patientName = appointment.patient?.user?.name;
+  const doctorEmail = appointment.doctor?.user?.email;
+  const doctorName = appointment.doctor?.user?.name;
+
+  const emailJobs = [];
+
+  if (patientEmail) {
+    emailJobs.push(
+      sendAppointmentNotificationEmail({
+        to: patientEmail,
+        recipientName: patientName,
+        action,
+        appointment,
+      }),
+    );
+  }
+
+  if (doctorEmail) {
+    emailJobs.push(
+      sendAppointmentNotificationEmail({
+        to: doctorEmail,
+        recipientName: doctorName,
+        action,
+        appointment,
+      }),
+    );
+  }
+
+  await Promise.allSettled(emailJobs);
+};
+
 export const bookAppointment = async (req, res, next) => {
   try {
-    const patientId = req.user._id;
+    const userId = req.user._id;
     const { doctorId, date, startTime, endTime } = req.body;
 
-    // 1) Check doctor exists
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
-      const error = new Error("Doctor not found");
-      error.statusCode = 404;
-      return next(error);
+      return res.status(404).json({
+        message: "Doctor not found",
+      });
     }
 
-    // 2) Prevent double booking
+    const patient = await Patient.findOne({ user: userId });
+    if (!patient) {
+      return res.status(404).json({
+        message: "Patient profile not found",
+      });
+    }
+
     const conflict = await Appointment.findOne({
       doctor: doctorId,
       date,
@@ -25,44 +86,67 @@ export const bookAppointment = async (req, res, next) => {
     });
 
     if (conflict) {
-      const error = new Error("Time slot already booked");
-      error.statusCode = 400;
-      return next(error);
+      return res.status(400).json({
+        message: "Time slot already booked",
+      });
     }
 
-    // 3) Create appointment
     const appointment = await Appointment.create({
-      patient: patientId,
-      doctor: doctorId,
+      patient: patient._id,
+      doctor: doctor._id,
       date,
       startTime,
       endTime,
       status: "pending",
-      createdBy: patientId,
+      createdBy: userId,
     });
 
-    res.status(201).json({
+    notifyAppointmentParties({
+      appointmentId: appointment._id,
+      action: "booked",
+    }).catch((notificationError) => {
+      console.error(
+        "Failed to send booking notification:",
+        notificationError.message,
+      );
+    });
+
+    return res.status(201).json({
       message: "Appointment booked successfully",
       appointment,
     });
   } catch (error) {
+    if (isDuplicateSlotError(error)) {
+      return res.status(409).json({
+        message: "Time slot already booked",
+      });
+    }
+
     next(error);
   }
 };
 
-// @desc    Get my appointments (Patient or Doctor)
-// @route   GET /appointments/my
-// @access  Patient, Doctor
 export const getMyAppointments = async (req, res, next) => {
   try {
     const user = req.user;
-
     let filter = {};
 
     if (user.role === "patient") {
-      filter.patient = user._id;
+      const patient = await Patient.findOne({ user: user._id });
+      if (!patient) {
+        return res.status(404).json({
+          message: "Patient profile not found",
+        });
+      }
+      filter.patient = patient._id;
     } else if (user.role === "doctor") {
-      filter.doctor = user._id;
+      const doctor = await Doctor.findOne({ user: user._id });
+      if (!doctor) {
+        return res.status(404).json({
+          message: "Doctor profile not found",
+        });
+      }
+      filter.doctor = doctor._id;
     }
 
     const appointments = await Appointment.find(filter)
@@ -72,35 +156,98 @@ export const getMyAppointments = async (req, res, next) => {
         populate: { path: "user", select: "name email" },
       });
 
-    res.json({ appointments });
+    return res.status(200).json({
+      message: "Appointments fetched successfully",
+      appointments,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Cancel appointment (Patient only - owner)
-// @route   PATCH /appointments/:id/cancel
-// @access  Patient
+export const getDoctorAppointmentsByView = async (req, res, next) => {
+  try {
+    const doctor = await Doctor.findOne({ user: req.user._id });
+    if (!doctor) {
+      return res.status(404).json({
+        message: "Doctor profile not found",
+      });
+    }
+
+    const { view = "all" } = req.query;
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const filter = { doctor: doctor._id };
+
+    if (view === "pending") {
+      filter.status = "pending";
+    } else if (view === "upcoming") {
+      filter.status = { $in: ["pending", "confirmed"] };
+      filter.date = { $gte: startOfToday };
+    } else if (view === "past") {
+      filter.$or = [
+        { status: { $in: ["completed", "cancelled"] } },
+        { date: { $lt: startOfToday } },
+      ];
+    }
+
+    const appointments = await Appointment.find(filter)
+      .sort({ date: 1, startTime: 1 })
+      .populate({
+        path: "patient",
+        populate: { path: "user", select: "name email" },
+      })
+      .populate({
+        path: "doctor",
+        populate: { path: "user", select: "name email" },
+      });
+
+    return res.status(200).json({
+      message: "Doctor appointments fetched successfully",
+      view,
+      appointments,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const cancelAppointment = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const patientId = req.user._id;
+    const patient = await Patient.findOne({ user: req.user._id });
+    if (!patient) {
+      return res.status(404).json({
+        message: "Patient profile not found",
+      });
+    }
 
     const appointment = await Appointment.findOne({
       _id: id,
-      patient: patientId,
+      patient: patient._id,
     });
 
     if (!appointment) {
-      const error = new Error("Appointment not found");
-      error.statusCode = 404;
-      return next(error);
+      return res.status(404).json({
+        message: "Appointment not found",
+      });
     }
 
     appointment.status = "cancelled";
     await appointment.save();
 
-    res.json({
+    notifyAppointmentParties({
+      appointmentId: appointment._id,
+      action: "cancelled",
+    }).catch((notificationError) => {
+      console.error(
+        "Failed to send cancellation notification:",
+        notificationError.message,
+      );
+    });
+
+    return res.status(200).json({
       message: "Appointment cancelled successfully",
       appointment,
     });
@@ -109,37 +256,125 @@ export const cancelAppointment = async (req, res, next) => {
   }
 };
 
-// @desc    Update appointment status (Doctor only)
-// @route   PATCH /appointments/:id/status
-// @access  Doctor
-export const updateAppointmentStatus = async (req, res, next) => {
+export const rescheduleAppointment = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
-    const doctorId = req.user._id;
+    const { date, startTime, endTime } = req.body;
 
-    const allowedStatus = ["confirmed", "completed", "cancelled"];
-    if (!allowedStatus.includes(status)) {
-      const error = new Error("Invalid status value");
-      error.statusCode = 400;
-      return next(error);
+    const patient = await Patient.findOne({ user: req.user._id });
+    if (!patient) {
+      return res.status(404).json({
+        message: "Patient profile not found",
+      });
     }
 
     const appointment = await Appointment.findOne({
       _id: id,
-      doctor: doctorId,
+      patient: patient._id,
     });
 
     if (!appointment) {
-      const error = new Error("Appointment not found");
-      error.statusCode = 404;
-      return next(error);
+      return res.status(404).json({
+        message: "Appointment not found",
+      });
+    }
+
+    if (!["pending", "confirmed"].includes(appointment.status)) {
+      return res.status(400).json({
+        message: "Only pending or confirmed appointments can be rescheduled",
+      });
+    }
+
+    const conflict = await Appointment.findOne({
+      _id: { $ne: appointment._id },
+      doctor: appointment.doctor,
+      date,
+      startTime,
+      status: { $in: ["pending", "confirmed"] },
+    });
+
+    if (conflict) {
+      return res.status(400).json({
+        message: "Time slot already booked",
+      });
+    }
+
+    appointment.date = date;
+    appointment.startTime = startTime;
+    appointment.endTime = endTime;
+    appointment.status = "pending";
+
+    await appointment.save();
+
+    notifyAppointmentParties({
+      appointmentId: appointment._id,
+      action: "rescheduled",
+    }).catch((notificationError) => {
+      console.error(
+        "Failed to send reschedule notification:",
+        notificationError.message,
+      );
+    });
+
+    return res.status(200).json({
+      message: "Appointment rescheduled successfully",
+      appointment,
+    });
+  } catch (error) {
+    if (isDuplicateSlotError(error)) {
+      return res.status(409).json({
+        message: "Time slot already booked",
+      });
+    }
+
+    next(error);
+  }
+};
+
+export const updateAppointmentStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const doctor = await Doctor.findOne({ user: req.user._id });
+    if (!doctor) {
+      return res.status(404).json({
+        message: "Doctor profile not found",
+      });
+    }
+
+    const allowedStatus = ["confirmed", "completed", "cancelled"];
+
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status value",
+      });
+    }
+
+    const appointment = await Appointment.findOne({
+      _id: id,
+      doctor: doctor._id,
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        message: "Appointment not found",
+      });
     }
 
     appointment.status = status;
     await appointment.save();
 
-    res.json({
+    notifyAppointmentParties({
+      appointmentId: appointment._id,
+      action: `updated to ${status}`,
+    }).catch((notificationError) => {
+      console.error(
+        "Failed to send status notification:",
+        notificationError.message,
+      );
+    });
+
+    return res.status(200).json({
       message: "Status updated successfully",
       appointment,
     });
@@ -148,9 +383,48 @@ export const updateAppointmentStatus = async (req, res, next) => {
   }
 };
 
-// @desc    Admin: get all appointments
-// @route   GET /appointments
-// @access  Admin
+export const addConsultationNotes = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { consultationNotes } = req.body;
+
+    const doctor = await Doctor.findOne({ user: req.user._id });
+    if (!doctor) {
+      return res.status(404).json({
+        message: "Doctor profile not found",
+      });
+    }
+
+    const appointment = await Appointment.findOne({
+      _id: id,
+      doctor: doctor._id,
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        message: "Appointment not found",
+      });
+    }
+
+    if (appointment.status !== "completed") {
+      return res.status(400).json({
+        message:
+          "Consultation notes can only be added to completed appointments",
+      });
+    }
+
+    appointment.consultationNotes = consultationNotes;
+    await appointment.save();
+
+    return res.status(200).json({
+      message: "Consultation notes updated successfully",
+      appointment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getAllAppointments = async (req, res, next) => {
   try {
     const appointments = await Appointment.find()
@@ -160,7 +434,10 @@ export const getAllAppointments = async (req, res, next) => {
         populate: { path: "user", select: "name email" },
       });
 
-    res.json({ appointments });
+    return res.status(200).json({
+      message: "All appointments fetched successfully",
+      appointments,
+    });
   } catch (error) {
     next(error);
   }

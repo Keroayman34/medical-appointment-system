@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import Doctor from "./doctor.model.js";
+import { Patient } from "./patient.model.js";
+import { Availability } from "./availability.model.js";
+import { Appointment } from "./appointment.model.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -46,5 +50,42 @@ userSchema.methods.comparePassword = async function (plainPassword) {
   return await bcrypt.compare(plainPassword, this.password);
 };
 
+
+userSchema.post("findOneAndDelete", async function (deletedUser, next) {
+  try {
+    if (!deletedUser) return next();
+
+    const userId = deletedUser._id;
+
+    const [doctorProfile, patientProfile] = await Promise.all([
+      Doctor.findOneAndDelete({ user: userId }),
+      Patient.findOneAndDelete({ user: userId }),
+    ]);
+
+    if (doctorProfile) {
+      await Availability.deleteMany({ doctor: doctorProfile._id });
+    }
+
+    const appointmentFilters = [
+      { createdBy: userId },
+      { patient: userId },
+      { doctor: userId },
+    ];
+
+    if (doctorProfile) {
+      appointmentFilters.push({ doctor: doctorProfile._id });
+    }
+
+    if (patientProfile) {
+      appointmentFilters.push({ patient: patientProfile._id });
+    }
+
+    await Appointment.deleteMany({ $or: appointmentFilters });
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 const User = mongoose.model("User", userSchema);
 export default User;

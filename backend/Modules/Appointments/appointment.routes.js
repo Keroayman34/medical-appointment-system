@@ -2,8 +2,11 @@ import { Router } from "express";
 import {
   bookAppointment,
   getMyAppointments,
+  getDoctorAppointmentsByView,
   cancelAppointment,
+  rescheduleAppointment,
   updateAppointmentStatus,
+  addConsultationNotes,
   getAllAppointments,
 } from "./appointment.controller.js";
 
@@ -11,12 +14,13 @@ import { protect, allowRoles } from "../../Middlewares/auth.middleware.js";
 import { validate } from "../../Middlewares/validation.middleware.js";
 import {
   bookAppointmentSchema,
+  consultationNotesSchema,
+  rescheduleAppointmentSchema,
   updateStatusSchema,
 } from "./appointment.validation.js";
 
 const router = Router();
 
-// Patient: book appointment
 router.post(
   "/",
   protect,
@@ -25,13 +29,25 @@ router.post(
   bookAppointment,
 );
 
-// Patient or Doctor: get my appointments
 router.get("/my", protect, allowRoles("patient", "doctor"), getMyAppointments);
 
-// Patient: cancel appointment
+router.get(
+  "/doctor",
+  protect,
+  allowRoles("doctor"),
+  getDoctorAppointmentsByView,
+);
+
 router.patch("/:id/cancel", protect, allowRoles("patient"), cancelAppointment);
 
-// Doctor: update appointment status
+router.patch(
+  "/:id/reschedule",
+  protect,
+  allowRoles("patient"),
+  validate(rescheduleAppointmentSchema),
+  rescheduleAppointment,
+);
+
 router.patch(
   "/:id/status",
   protect,
@@ -40,7 +56,14 @@ router.patch(
   updateAppointmentStatus,
 );
 
-// Admin: get all appointments
+router.patch(
+  "/:id/consultation-notes",
+  protect,
+  allowRoles("doctor"),
+  validate(consultationNotesSchema),
+  addConsultationNotes,
+);
+
 router.get("/", protect, allowRoles("admin"), getAllAppointments);
 
 export default router;

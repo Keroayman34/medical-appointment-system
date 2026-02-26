@@ -1,22 +1,34 @@
 import Joi from "joi";
 
-<<<<<<< HEAD
-// Validation for booking an appointment
 export const bookAppointmentSchema = Joi.object({
-  doctorId: Joi.string().hex().length(24).required(), // Mongo ObjectId
+  doctorId: Joi.string().hex().length(24).required(),
   date: Joi.date().required(),
-  time: Joi.string()
+  startTime: Joi.string()
+    .pattern(/^\d{2}:\d{2}$/)
+    .required(), // HH:MM
+  endTime: Joi.string()
     .pattern(/^\d{2}:\d{2}$/)
     .required(), // HH:MM
 });
 
-// Validation for updating appointment status
 export const updateStatusSchema = Joi.object({
-  status: Joi.string()
-    .valid("pending", "confirmed", "cancelled", "completed")
+  status: Joi.string().valid("confirmed", "cancelled", "completed").required(),
+});
+
+export const consultationNotesSchema = Joi.object({
+  consultationNotes: Joi.string().trim().min(3).max(5000).required(),
+});
+
+export const rescheduleAppointmentSchema = Joi.object({
+  date: Joi.date().required(),
+  startTime: Joi.string()
+    .pattern(/^\d{2}:\d{2}$/)
+    .required(),
+  endTime: Joi.string()
+    .pattern(/^\d{2}:\d{2}$/)
     .required(),
 });
-=======
+
 export const createAppointmentValidation = Joi.object({
   doctor: Joi.string().hex().length(24).required(),
   patient: Joi.string().hex().length(24).required(),
@@ -24,4 +36,3 @@ export const createAppointmentValidation = Joi.object({
   startTime: Joi.string().required(),
   endTime: Joi.string().required(),
 });
->>>>>>> 1d67657 (update appointment validation and gitignore)

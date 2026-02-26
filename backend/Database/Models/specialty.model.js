@@ -5,7 +5,6 @@ const specialtySchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
 
@@ -16,14 +15,17 @@ const specialtySchema = new mongoose.Schema(
 
     isActive: {
       type: Boolean,
-      default: true, // admin can disable a specialty without deleting it
+      default: true,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-// Index to prevent duplicate names (case insensitive)
-specialtySchema.index({ name: 1 }, { unique: true });
+// Unique + Case Insensitive Index
+specialtySchema.index(
+  { name: 1 },
+  { unique: true, collation: { locale: "en", strength: 2 } }
+);
 
 const Specialty = mongoose.model("Specialty", specialtySchema);
 
