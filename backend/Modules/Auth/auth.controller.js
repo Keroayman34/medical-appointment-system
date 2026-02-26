@@ -2,16 +2,12 @@ import jwt from "jsonwebtoken";
 import { config } from "../../Config/env.js";
 import User from "../../Database/Models/user.model.js";
 
-// Helper function to generate JWT token
 const generateToken = (user) => {
   return jwt.sign({ _id: user._id, role: user.role }, config.JWT_SECRET, {
     expiresIn: "7d",
   });
 };
 
-// @desc    Register new user
-// @route   POST /auth/register
-// @access  Public
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
@@ -43,13 +39,10 @@ export const register = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error); // forward error to global error handler
+    next(error); 
   }
 };
 
-// @desc    Login user
-// @route   POST /auth/login
-// @access  Public
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -81,6 +74,6 @@ export const login = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error); // forward error to global error handler
+    next(error); 
   }
 };

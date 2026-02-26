@@ -1,9 +1,14 @@
 import Specialty from "../../Database/Models/specialty.model.js";
 
-
 export const createSpecialty = async (req, res, next) => {
   try {
-    const { name, description } = req.body;
+    const { name, description } = req.body || {};
+
+    if (!name) {
+      const error = new Error("name is required");
+      error.statusCode = 400;
+      return next(error);
+    }
 
     const existing = await Specialty.findOne({ name });
     if (existing) {
@@ -38,7 +43,17 @@ export const getAllSpecialties = async (req, res, next) => {
 export const updateSpecialty = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description, isActive } = req.body;
+    const { name, description, isActive } = req.body || {};
+
+    if (
+      name === undefined &&
+      description === undefined &&
+      isActive === undefined
+    ) {
+      const error = new Error("No fields provided to update");
+      error.statusCode = 400;
+      return next(error);
+    }
 
     const specialty = await Specialty.findById(id);
     if (!specialty) {

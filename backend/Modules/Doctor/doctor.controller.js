@@ -1,14 +1,23 @@
 import Doctor from "../../Database/Models/doctor.model.js";
 import Specialty from "../../Database/Models/specialty.model.js";
 import mongoose from "mongoose";
+import User from "../../Database/Models/user.model.js";
 
 export const createDoctorProfile = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    const { specialtyId, bio, phone, fees, experienceYears } = req.body;
+    const { specialtyId, specialty, bio, phone, fees, experienceYears } =
+      req.body || {};
+    const selectedSpecialtyId = specialtyId || specialty;
 
-    const specialty = await Specialty.findById(specialtyId);
-    if (!specialty) {
+    if (!selectedSpecialtyId) {
+      const error = new Error("specialtyId is required");
+      error.statusCode = 400;
+      return next(error);
+    }
+
+    const specialtyDoc = await Specialty.findById(selectedSpecialtyId);
+    if (!specialtyDoc) {
       const error = new Error("Specialty not found");
       error.statusCode = 404;
       return next(error);
@@ -23,7 +32,7 @@ export const createDoctorProfile = async (req, res, next) => {
 
     const doctor = await Doctor.create({
       user: userId,
-      specialty: specialtyId,
+      specialty: selectedSpecialtyId,
       bio,
       phone,
       fees,
@@ -62,7 +71,17 @@ export const getMyDoctorProfile = async (req, res, next) => {
 export const updateMyDoctorProfile = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    const { specialtyId, bio, phone, fees, experienceYears } = req.body;
+    const {
+      specialtyId,
+      specialty,
+      bio,
+      phone,
+      fees,
+      experienceYears,
+      name,
+      email,
+    } = req.body || {};
+    const selectedSpecialtyId = specialtyId || specialty;
 
     const doctor = await Doctor.findOne({ user: userId });
     if (!doctor) {
@@ -71,20 +90,34 @@ export const updateMyDoctorProfile = async (req, res, next) => {
       return next(error);
     }
 
-    if (specialtyId !== undefined) {
-      const specialty = await Specialty.findById(specialtyId);
-      if (!specialty) {
+    if (selectedSpecialtyId !== undefined) {
+      const specialtyDoc = await Specialty.findById(selectedSpecialtyId);
+      if (!specialtyDoc) {
         const error = new Error("Specialty not found");
         error.statusCode = 404;
         return next(error);
       }
-      doctor.specialty = specialtyId;
+      doctor.specialty = selectedSpecialtyId;
     }
 
     if (bio !== undefined) doctor.bio = bio;
     if (phone !== undefined) doctor.phone = phone;
     if (fees !== undefined) doctor.fees = fees;
     if (experienceYears !== undefined) doctor.experienceYears = experienceYears;
+
+    if (name !== undefined || email !== undefined) {
+      const user = await User.findById(userId);
+      if (!user) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
+        return next(error);
+      }
+
+      if (name !== undefined) user.name = name;
+      if (email !== undefined) user.email = email;
+
+      await user.save();
+    }
 
     await doctor.save();
 
