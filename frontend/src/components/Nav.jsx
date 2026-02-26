@@ -6,6 +6,7 @@ import { logout } from '../redux/slices/authSlice.js';
 
 const Nav = () => {
     const { user, token } = useSelector(state => state.auth);
+    const isAuthenticated = Boolean(token && user);
     const dispatch = useDispatch();
     const navg = useNavigate();
 
@@ -35,7 +36,7 @@ const Nav = () => {
                 <NavLink to="/doctors" className={linkStyle}><li>All Doctors</li></NavLink>
 
                 {/* روابط الدكتور فقط */}
-                {token && user?.role === 'doctor' && (
+                {isAuthenticated && user?.role === 'doctor' && (
                     <>
                         <NavLink to="/doctor-dashboard" className={linkStyle}><li>Dashboard</li></NavLink>
                         <NavLink to="/doctor-appointments" className={linkStyle}><li>Appointments</li></NavLink>
@@ -43,7 +44,7 @@ const Nav = () => {
                 )}
 
                 {/* روابط الأدمن فقط */}
-                {token && user?.role === 'admin' && (
+                {isAuthenticated && user?.role === 'admin' && (
                     <>
                         <NavLink to="/admin-dashboard" className={linkStyle}><li className="text-main font-bold italic">Admin Panel</li></NavLink>
                         <NavLink to="/add-doctor" className={linkStyle}><li>Add Doctor</li></NavLink>
@@ -53,7 +54,7 @@ const Nav = () => {
 
             {/* 3. منطقة الحساب (Profile / Login) */}
             <div className="flex items-center gap-4">
-                {token ? (
+                {isAuthenticated ? (
                     <div className="flex items-center gap-2 cursor-pointer group relative">
                         <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
                             <img className="w-8 h-8 rounded-full object-cover" src={user?.image || asts.prof} alt="profile" />

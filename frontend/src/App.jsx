@@ -27,6 +27,7 @@ import Footer from "./components/footer.jsx";
 const App = () => {
   // جلب بيانات المستخدم والتوكن من الـ Redux
   const { user, token } = useSelector((state) => state.auth);
+  const isAuthenticated = Boolean(token && user);
 
   return (
     <div className="mx-3 sm:mx-[12%]">
@@ -46,39 +47,39 @@ const App = () => {
           <Route path="/Appint/:docID" element={<Appoint />} />
           
           {/* حماية صفحات الدخول: لو مسجل دخول بالفعل يتم توجيهه للرئيسية */}
-          <Route path="/login" element={!token ? <Login /> : <Navigate to='/' />} />
-          <Route path="/register" element={!token ? <Register /> : <Navigate to='/' />} />
+          <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to='/' />} />
+          <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to='/' />} />
 
           {/* --- مسارات المريض (تتطلب تسجيل دخول) --- */}
-          <Route path="/profile" element={token ? <Profile /> : <Navigate to='/login' />} />
-          <Route path="/my-appointments" element={token ? <Appointments /> : <Navigate to='/login' />} />
+          <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to='/login' />} />
+          <Route path="/my-appointments" element={isAuthenticated ? <Appointments /> : <Navigate to='/login' />} />
 
           {/* --- مسارات الطبيب (تتطلب دور doctor) --- */}
           <Route 
             path="/doctor-dashboard" 
-            element={token && user?.role === 'doctor' ? <DoctorDashboard /> : <Navigate to='/login' />} 
+            element={isAuthenticated && user?.role === 'doctor' ? <DoctorDashboard /> : <Navigate to='/login' />} 
           />
           <Route 
             path="/doctor-appointments" 
-            element={token && user?.role === 'doctor' ? <DoctorAppointments /> : <Navigate to='/login' />} 
+            element={isAuthenticated && user?.role === 'doctor' ? <DoctorAppointments /> : <Navigate to='/login' />} 
           />
           <Route 
             path="/doctor-profile" 
-            element={token && user?.role === 'doctor' ? <DoctorProfile /> : <Navigate to='/login' />} 
+            element={isAuthenticated && user?.role === 'doctor' ? <DoctorProfile /> : <Navigate to='/login' />} 
           />
 
           {/* --- مسارات الأدمن (تتطلب دور admin) --- */}
           <Route 
             path="/admin-dashboard" 
-            element={token && user?.role === 'admin' ? <AdminDashboard /> : <Navigate to='/login' />} 
+            element={isAuthenticated && user?.role === 'admin' ? <AdminDashboard /> : <Navigate to='/login' />} 
           />
           <Route 
             path="/add-doctor" 
-            element={token && user?.role === 'admin' ? <AddDoctor /> : <Navigate to='/login' />} 
+            element={isAuthenticated && user?.role === 'admin' ? <AddDoctor /> : <Navigate to='/login' />} 
           />
           <Route 
             path="/admin-all-doctors" 
-            element={token && user?.role === 'admin' ? <Doctors isAdmin={true} /> : <Navigate to='/login' />} 
+            element={isAuthenticated && user?.role === 'admin' ? <Doctors isAdmin={true} /> : <Navigate to='/login' />} 
           />
 
           {/* مسار احتياطي في حال طلب رابط غير موجود */}

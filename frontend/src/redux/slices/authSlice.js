@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const FRIENDLY_NETWORK_ERROR =
+  "Cannot reach server. Make sure backend is running on port 5000.";
+
 // استخدام المسارات النسبية المتوافقة مع الـ Proxy و auth.routes.js
 const API_URL = "/api/auth";
 const USER_API = "/api/users";
@@ -11,7 +14,9 @@ export const loginUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       // userData يجب أن يحتوي على { email, password } فقط
-      const response = await axios.post(`${API_URL}/login`, userData);
+      const response = await axios.post(`${API_URL}/login`, userData, {
+        timeout: 15000,
+      });
 
       // حفظ التوكن وبيانات المستخدم المستلمة من السيرفر
       localStorage.setItem("token", response.data.token);
@@ -20,6 +25,12 @@ export const loginUser = createAsyncThunk(
       return response.data;
     } catch (error) {
       // استلام رسالة الخطأ المخصصة من السيرفر (مثل: "Invalid email or password")
+      if (error.code === "ECONNABORTED") {
+        return rejectWithValue("Request timed out. Please try again.");
+      }
+      if (!error.response) {
+        return rejectWithValue(FRIENDLY_NETWORK_ERROR);
+      }
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   },
@@ -31,7 +42,9 @@ export const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       // userData يجب أن يحتوي على { name, email, password, role }
-      const response = await axios.post(`${API_URL}/register`, userData);
+      const response = await axios.post(`${API_URL}/register`, userData, {
+        timeout: 15000,
+      });
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -39,6 +52,12 @@ export const registerUser = createAsyncThunk(
       return response.data;
     } catch (error) {
       // استلام أخطاء الـ Validation أو تكرار الإيميل
+      if (error.code === "ECONNABORTED") {
+        return rejectWithValue("Request timed out. Please try again.");
+      }
+      if (!error.response) {
+        return rejectWithValue(FRIENDLY_NETWORK_ERROR);
+      }
       return rejectWithValue(
         error.response?.data?.details?.[0] ||
           error.response?.data?.message ||

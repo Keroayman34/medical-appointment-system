@@ -17,7 +17,18 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      const allowedPatterns = [
+        /^http:\/\/localhost:(5173|5174)$/,
+        /^http:\/\/127\.0\.0\.1:(5173|5174)$/,
+        /^http:\/\/192\.168\.\d+\.\d+:(5173|5174)$/,
+      ];
+
+      const isAllowed = allowedPatterns.some((pattern) => pattern.test(origin));
+      return callback(null, isAllowed);
+    },
     credentials: true,
   }),
 );
