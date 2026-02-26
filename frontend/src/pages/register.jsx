@@ -82,7 +82,7 @@ const Register = () => {
                     <p className="text-zinc-500 mt-2">Please enter your details to register</p>
                 </div>
 
-                {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100">{error}</div>}
+                {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100 whitespace-pre-line">{error}</div>}
 
                 {/* Role Selection */}
                 <div className="w-full">

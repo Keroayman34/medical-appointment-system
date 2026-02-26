@@ -9,9 +9,33 @@ const isDuplicateSlotError = (error) => {
     error.code === 11000 &&
     error.keyPattern &&
     error.keyPattern.doctor === 1 &&
-    error.keyPattern.date === 1 &&
+    error.keyPattern.slotDate === 1 &&
     error.keyPattern.startTime === 1
   );
+};
+
+const getSlotDateKey = (date) => {
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return null;
+  return parsedDate.toISOString().split("T")[0];
+};
+
+const getUtcDayRange = (date) => {
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return null;
+
+  const startOfDay = new Date(
+    Date.UTC(
+      parsedDate.getUTCFullYear(),
+      parsedDate.getUTCMonth(),
+      parsedDate.getUTCDate(),
+    ),
+  );
+
+  const endOfDay = new Date(startOfDay);
+  endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+
+  return { startOfDay, endOfDay };
 };
 
 const notifyAppointmentParties = async ({ appointmentId, action }) => {
@@ -38,6 +62,14 @@ export const bookAppointment = async (req, res, next) => {
   try {
     const userId = req.user._id;
     const { doctorId, date, startTime, endTime } = req.body;
+    const slotDate = getSlotDateKey(date);
+    const dayRange = getUtcDayRange(date);
+
+    if (!slotDate || !dayRange) {
+      return res.status(400).json({
+        message: "Invalid appointment date",
+      });
+    }
 
     let doctor = await Doctor.findById(doctorId);
     if (!doctor) {
@@ -61,9 +93,12 @@ export const bookAppointment = async (req, res, next) => {
 
     const conflict = await Appointment.findOne({
       doctor: doctor._id,
-      date,
       startTime,
       status: { $in: ["pending", "confirmed"] },
+      $or: [
+        { slotDate },
+        { date: { $gte: dayRange.startOfDay, $lt: dayRange.endOfDay } },
+      ],
     });
 
     if (conflict) {
@@ -76,6 +111,7 @@ export const bookAppointment = async (req, res, next) => {
       patient: patient._id,
       doctor: doctor._id,
       date,
+      slotDate,
       startTime,
       endTime,
       status: "pending",
@@ -244,6 +280,14 @@ export const rescheduleAppointment = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { date, startTime, endTime } = req.body;
+    const slotDate = getSlotDateKey(date);
+    const dayRange = getUtcDayRange(date);
+
+    if (!slotDate || !dayRange) {
+      return res.status(400).json({
+        message: "Invalid appointment date",
+      });
+    }
 
     const patient = await Patient.findOne({ user: req.user._id });
     if (!patient) {
@@ -272,9 +316,12 @@ export const rescheduleAppointment = async (req, res, next) => {
     const conflict = await Appointment.findOne({
       _id: { $ne: appointment._id },
       doctor: appointment.doctor,
-      date,
       startTime,
       status: { $in: ["pending", "confirmed"] },
+      $or: [
+        { slotDate },
+        { date: { $gte: dayRange.startOfDay, $lt: dayRange.endOfDay } },
+      ],
     });
 
     if (conflict) {
@@ -284,6 +331,7 @@ export const rescheduleAppointment = async (req, res, next) => {
     }
 
     appointment.date = date;
+    appointment.slotDate = slotDate;
     appointment.startTime = startTime;
     appointment.endTime = endTime;
     appointment.status = "pending";

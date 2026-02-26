@@ -16,13 +16,18 @@ const appointmentSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    slotDate: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     startTime: {
       type: String,
-      required: true, 
+      required: true,
     },
     endTime: {
       type: String,
-      required: true, 
+      required: true,
     },
     status: {
       type: String,
@@ -42,6 +47,19 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-appointmentSchema.index({ doctor: 1, date: 1, startTime: 1 }, { unique: true });
+appointmentSchema.pre("validate", function setSlotDate(next) {
+  if (this.date) {
+    const parsedDate = new Date(this.date);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      this.slotDate = parsedDate.toISOString().split("T")[0];
+    }
+  }
+  next();
+});
+
+appointmentSchema.index(
+  { doctor: 1, slotDate: 1, startTime: 1 },
+  { unique: true },
+);
 
 export const Appointment = mongoose.model("Appointment", appointmentSchema);

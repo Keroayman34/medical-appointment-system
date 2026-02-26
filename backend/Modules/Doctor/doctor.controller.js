@@ -2,6 +2,7 @@ import Doctor from "../../Database/Models/doctor.model.js";
 import Specialty from "../../Database/Models/specialty.model.js";
 import mongoose from "mongoose";
 import User from "../../Database/Models/user.model.js";
+import { sendDoctorApprovalEmail } from "../../Utils/sendEmail.js";
 
 export const createDoctorProfile = async (req, res, next) => {
   try {
@@ -239,16 +240,30 @@ export const getPendingDoctors = async (req, res, next) => {
 
 export const approveDoctor = async (req, res, next) => {
   try {
-    const doctor = await Doctor.findByIdAndUpdate(
-      req.params.id,
-      { isApproved: true, status: "approved" },
-      { new: true },
+    const doctor = await Doctor.findById(req.params.id).populate(
+      "user",
+      "name email",
     );
 
     if (!doctor) {
       const error = new Error("Doctor not found");
       error.statusCode = 404;
       return next(error);
+    }
+
+    const wasPending = doctor.status === "pending";
+
+    doctor.isApproved = true;
+    doctor.status = "approved";
+    await doctor.save();
+
+    if (wasPending && doctor.user?.email) {
+      sendDoctorApprovalEmail({
+        to: doctor.user.email,
+        recipientName: doctor.user.name,
+      }).catch((emailError) => {
+        console.error("Failed to send doctor approval email:", emailError.message);
+      });
     }
 
     res.status(200).json({ message: "Doctor approved", doctor });

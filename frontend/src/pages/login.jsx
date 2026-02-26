@@ -26,7 +26,7 @@ let Login = () => {
                 <p className="text-2xl font-semibold">Login</p>
 
                 <p>please fill in all fields</p>
-                {error && <p className="text-red-500 text-xs">{error}</p>}
+                {error && <p className="text-red-500 text-xs whitespace-pre-line">{error}</p>}
                 <div className="w-full">
 
                     <p>Email</p>

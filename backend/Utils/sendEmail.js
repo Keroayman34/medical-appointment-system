@@ -82,3 +82,23 @@ export const sendAppointmentNotificationEmail = async ({
 
   return sendEmail({ to, subject, text, html });
 };
+
+export const sendDoctorApprovalEmail = async ({ to, recipientName }) => {
+  const subject = "Doctor profile approved";
+  const text = [
+    `Hello ${recipientName || "Doctor"},`,
+    "",
+    "Your doctor profile has been approved.",
+    "You can now log in and start receiving appointments.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <p>Hello ${recipientName || "Doctor"},</p>
+      <p>Your doctor profile has been <strong>approved</strong>.</p>
+      <p>You can now log in and start receiving appointments.</p>
+    </div>
+  `;
+
+  return sendEmail({ to, subject, text, html });
+};
