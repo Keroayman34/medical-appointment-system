@@ -160,8 +160,14 @@ export const updateMyDoctorProfile = async (req, res, next) => {
 
 export const discoverDoctors = async (req, res, next) => {
   try {
-    const { name, specialty, minRating } = req.query;
-    const filter = { isApproved: true };
+    const { name, specialty, minRating, approved } = req.query;
+    const filter = {};
+
+    if (approved === "true") {
+      filter.isApproved = true;
+    } else if (approved === "false") {
+      filter.isApproved = false;
+    }
 
     if (minRating !== undefined) {
       const ratingValue = Number(minRating);
