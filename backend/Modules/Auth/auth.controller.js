@@ -16,13 +16,13 @@ const formatUserResponse = (user) => ({
   phone: user.phone || "",
   address: user.address || "",
   gender: user.gender || "male",
-  dob: user.dob || "",
+  age: user.age ?? null,
   image: user.image || "",
 });
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body || {};
+    const { name, email, password, role } = req.body || {};
 
     if (!name || !email || !password) {
       const error = new Error("name, email and password are required");
@@ -37,11 +37,13 @@ export const register = async (req, res, next) => {
       return next(error);
     }
 
+    const selectedRole = role === "doctor" ? "doctor" : "patient";
+
     const user = await User.create({
       name,
       email,
       password,
-      role: "patient",
+      role: selectedRole,
     });
 
     const token = generateToken(user);

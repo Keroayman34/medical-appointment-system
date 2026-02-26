@@ -7,6 +7,7 @@ let Register = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [role, setRole] = useState("patient");
     
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -15,7 +16,7 @@ let Register = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         // إرسال البيانات (الاسم، الإيميل، الباسورد) للباك إيند
-        dispatch(registerUser({ name, email, password })).then((result) => {
+        dispatch(registerUser({ name, email, password, role })).then((result) => {
             if (result.meta.requestStatus === 'fulfilled') {
                 navigate('/'); // التوجه للرئيسية بعد النجاح
             }
@@ -39,6 +40,13 @@ let Register = () => {
                 <div className="w-full">
                     <p>Password</p>
                     <input className="border rounded w-full p-2 mt-1" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                </div>
+                <div className="w-full">
+                    <p>Account Type</p>
+                    <select className="border rounded w-full p-2 mt-1" value={role} onChange={(e) => setRole(e.target.value)}>
+                        <option value="patient">Patient</option>
+                        <option value="doctor">Doctor</option>
+                    </select>
                 </div>
                 
                 <button disabled={loading} className="bg-main text-white w-full py-2 rounded-md mt-4">

@@ -22,7 +22,7 @@ const Profile = () => {
         phone: user?.phone || "",
         address: user?.address || "",
         gender: user?.gender || "male",
-        dob: user?.dob || "",
+        age: user?.age ?? "",
         img: user?.image || asts.prof 
     });
 
@@ -83,7 +83,7 @@ const Profile = () => {
             phone: userData.phone,
             address: userData.address,
             gender: userData.gender,
-            dob: userData.dob,
+            age: userData.age === "" ? null : Number(userData.age),
             image: typeof userData.img === "string" ? userData.img : "",
         };
 
@@ -155,11 +155,11 @@ const Profile = () => {
                         </select>
                         : <p className="text-gray-400">{userData.gender}</p>
                     }
-                    <p className="font-medium">DATE OF BIRTH : </p>
+                    <p className="font-medium">AGE : </p>
                     {
                         editMode
-                        ? <input className="max-w-28 bg-gray-100 px-1" type="date" value={userData.dob} onChange={(e) => setUserData({...userData, dob: e.target.value})}/>
-                        : <p className="text-gray-400">{userData.dob}</p>
+                        ? <input className="max-w-28 bg-gray-100 px-1" type="number" min="0" max="130" value={userData.age} onChange={(e) => setUserData({...userData, age: e.target.value})}/>
+                        : <p className="text-gray-400">{userData.age ?? ""}</p>
                     }
                 </div>
             </div>

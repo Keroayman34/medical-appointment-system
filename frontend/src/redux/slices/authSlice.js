@@ -14,7 +14,9 @@ export const loginUser = createAsyncThunk(
       localStorage.setItem("user", JSON.stringify(response.data.user));
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Login failed");
+      const serverMessage =
+        error.response?.data?.details?.[0] || error.response?.data?.message;
+      return rejectWithValue(serverMessage || "Login failed");
     }
   },
 );
@@ -29,9 +31,9 @@ export const registerUser = createAsyncThunk(
       localStorage.setItem("user", JSON.stringify(response.data.user));
       return response.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Registration failed",
-      );
+      const serverMessage =
+        error.response?.data?.details?.[0] || error.response?.data?.message;
+      return rejectWithValue(serverMessage || "Registration failed");
     }
   },
 );

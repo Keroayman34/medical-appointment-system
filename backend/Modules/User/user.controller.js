@@ -1,6 +1,5 @@
 import User from "../../Database/Models/user.model.js";
 
-// Admin: Get all users
 export const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find().select("-password");
@@ -10,7 +9,6 @@ export const getAllUsers = async (req, res, next) => {
   }
 };
 
-// Get my profile
 export const getMyProfile = async (req, res, next) => {
   try {
     res.json({ user: req.user });
@@ -22,7 +20,7 @@ export const getMyProfile = async (req, res, next) => {
 export const updateMyProfile = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    const { name, email, phone, address, gender, dob, image } = req.body || {};
+    const { name, email, phone, address, gender, age, image } = req.body || {};
 
     const user = await User.findById(userId);
     if (!user) {
@@ -36,7 +34,7 @@ export const updateMyProfile = async (req, res, next) => {
     if (phone !== undefined) user.phone = phone;
     if (address !== undefined) user.address = address;
     if (gender !== undefined) user.gender = gender;
-    if (dob !== undefined) user.dob = dob;
+    if (age !== undefined) user.age = age;
     if (image !== undefined) user.image = image;
 
     await user.save();
@@ -51,7 +49,7 @@ export const updateMyProfile = async (req, res, next) => {
         phone: user.phone,
         address: user.address,
         gender: user.gender,
-        dob: user.dob,
+        age: user.age,
         image: user.image,
       },
     });

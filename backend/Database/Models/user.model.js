@@ -55,10 +55,11 @@ const userSchema = new mongoose.Schema(
       default: "male",
     },
 
-    dob: {
-      type: String,
-      default: "",
-      trim: true,
+    age: {
+      type: Number,
+      min: 0,
+      max: 130,
+      default: null,
     },
 
     image: {
