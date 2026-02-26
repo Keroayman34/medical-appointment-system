@@ -22,7 +22,7 @@ const formatUserResponse = (user) => ({
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body || {};
+    const { name, email, password, role, phone, gender, age } = req.body || {};
 
     if (!name || !email || !password) {
       const error = new Error("name, email and password are required");
@@ -44,6 +44,9 @@ export const register = async (req, res, next) => {
       email,
       password,
       role: selectedRole,
+      phone: phone || "",
+      gender: gender || "male",
+      age: age ?? null,
     });
 
     const token = generateToken(user);

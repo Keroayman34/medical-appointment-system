@@ -9,9 +9,9 @@ const Register = () => {
         name: "",
         email: "",
         password: "",
-        role: "user", 
+        role: "patient", 
         phone: "",
-        gender: "Male",
+        gender: "male",
         age: "",
         // Doctor specific fields
         specialty: "",
@@ -26,8 +26,19 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        const resultAction = await dispatch(registerUser(formData));
+
+        const payload = {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+        };
+
+        if (formData.phone?.trim()) payload.phone = formData.phone.trim();
+        if (formData.gender) payload.gender = formData.gender.toLowerCase();
+        if (formData.age !== "") payload.age = Number(formData.age);
+
+        const resultAction = await dispatch(registerUser(payload));
 
         if (registerUser.fulfilled.match(resultAction)) {
             toast.success("Account created successfully!");
@@ -56,7 +67,7 @@ const Register = () => {
                         value={formData.role}
                         onChange={(e) => setFormData({...formData, role: e.target.value})}
                     >
-                        <option value="user">Patient</option>
+                        <option value="patient">Patient</option>
                         <option value="doctor">Doctor</option>
                     </select>
                 </div>
@@ -86,8 +97,8 @@ const Register = () => {
                     <div>
                         <p className="text-zinc-600 text-sm">Gender</p>
                         <select className="border border-zinc-300 rounded-lg w-full p-2 mt-1" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
                         </select>
                     </div>
                 </div>
