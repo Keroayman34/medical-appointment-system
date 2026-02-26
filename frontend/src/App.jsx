@@ -16,10 +16,7 @@ import Register from "./pages/register.jsx";
 // استيراد صفحات الطبيب والأدمن
 import DoctorDashboard from "./pages/doctorDashboard.jsx";
 import DoctorAppointments from "./pages/doctorAppointments.jsx";
-<<<<<<< HEAD
 import DoctorProfile from "./pages/doctorProfile.jsx";
-=======
->>>>>>> 0f1442d (edit login & register pages)
 import AddDoctor from "./pages/addDoctor.jsx";
 import AdminDashboard from "./pages/adminDasboard.jsx"; 
 
@@ -28,33 +25,34 @@ import Nav from "./components/Nav.jsx";
 import Footer from "./components/footer.jsx";
 
 const App = () => {
+  // جلب بيانات المستخدم والتوكن من الـ Redux
   const { user, token } = useSelector((state) => state.auth);
 
   return (
     <div className="mx-3 sm:mx-[12%]">
-      {/* 1. الشريط العلوي ثابت ويحتوي الآن على روابط التحكم */}
+      {/* الشريط العلوي */}
       <Nav />
       
-      {/* 2. حاوية المحتوى: تأخذ العرض الكامل الآن بعد حذف الـ Sidebar */}
+      {/* حاوية المحتوى الرئيسية */}
       <div className="w-full min-h-[80vh]">
         <Routes>
-          {/* --- مسارات عامة --- */}
+          {/* --- مسارات عامة (متاحة للجميع) --- */}
           <Route path="/" element={<Home />} />
           <Route path="/doctors" element={<Doctors isAdmin={false} />} />
           <Route path="/doctors/:speciality" element={<Doctors isAdmin={false} />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/Appint/:docID" element={<Appoint />} />
           
-          {/* حماية صفحات الدخول: لو مسجل دخول بالفعل يروح للرئيسية */}
+          {/* حماية صفحات الدخول: لو مسجل دخول بالفعل يتم توجيهه للرئيسية */}
           <Route path="/login" element={!token ? <Login /> : <Navigate to='/' />} />
           <Route path="/register" element={!token ? <Register /> : <Navigate to='/' />} />
 
-          {/* --- مسارات المريض (تطلب تسجيل دخول) --- */}
+          {/* --- مسارات المريض (تتطلب تسجيل دخول) --- */}
           <Route path="/profile" element={token ? <Profile /> : <Navigate to='/login' />} />
           <Route path="/my-appointments" element={token ? <Appointments /> : <Navigate to='/login' />} />
-          <Route path="/Appint/:docID" element={<Appoint />} />
 
-          {/* --- مسارات الطبيب (تطلب دور doctor) --- */}
+          {/* --- مسارات الطبيب (تتطلب دور doctor) --- */}
           <Route 
             path="/doctor-dashboard" 
             element={token && user?.role === 'doctor' ? <DoctorDashboard /> : <Navigate to='/login' />} 
@@ -63,10 +61,12 @@ const App = () => {
             path="/doctor-appointments" 
             element={token && user?.role === 'doctor' ? <DoctorAppointments /> : <Navigate to='/login' />} 
           />
+          <Route 
+            path="/doctor-profile" 
+            element={token && user?.role === 'doctor' ? <DoctorProfile /> : <Navigate to='/login' />} 
+          />
 
-          <Route path="/doctor-profile" element={token && user?.role === 'doctor' ? <DoctorProfile /> : <Navigate to='/login' />} />
-
-          {/* --- مسارات الأدمن (تطلب دور admin) --- */}
+          {/* --- مسارات الأدمن (تتطلب دور admin) --- */}
           <Route 
             path="/admin-dashboard" 
             element={token && user?.role === 'admin' ? <AdminDashboard /> : <Navigate to='/login' />} 
@@ -79,10 +79,12 @@ const App = () => {
             path="/admin-all-doctors" 
             element={token && user?.role === 'admin' ? <Doctors isAdmin={true} /> : <Navigate to='/login' />} 
           />
+
+          {/* مسار احتياطي في حال طلب رابط غير موجود */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
 
-      {/* الفوتر يظهر في كل الصفحات بشكل طبيعي الآن */}
       <Footer />
     </div>
   );

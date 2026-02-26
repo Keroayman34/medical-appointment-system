@@ -20,29 +20,12 @@ const Register = () => {
         degree: "", 
     });
 
-<<<<<<< HEAD
-let Register = () => {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [role, setRole] = useState("patient");
-    
-=======
->>>>>>> 0f1442d (edit login & register pages)
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { loading, error } = useSelector((state) => state.auth);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-<<<<<<< HEAD
-        // إرسال البيانات (الاسم، الإيميل، الباسورد) للباك إيند
-        dispatch(registerUser({ name, email, password, role })).then((result) => {
-            if (result.meta.requestStatus === 'fulfilled') {
-                navigate('/'); // التوجه للرئيسية بعد النجاح
-            }
-        });
-=======
         
         const resultAction = await dispatch(registerUser(formData));
 
@@ -53,14 +36,13 @@ let Register = () => {
             console.error("Server Response:", resultAction.payload);
             toast.error(resultAction.payload || "Registration Failed. Please check all fields.");
         }
->>>>>>> 0f1442d (edit login & register pages)
     };
 
     return (
         <form onSubmit={handleSubmit} className="min-h-[80vh] flex items-center py-12 bg-gray-50">
             <div className="flex flex-col gap-4 m-auto p-8 min-w-[340px] sm:min-w-[550px] border border-zinc-200 rounded-2xl shadow-xl bg-white">
                 <div className="text-center mb-4">
-                    <p className="text-3xl font-bold text-main">Create Account</p>
+                    <p className="text-3xl font-bold text-blue-600">Create Account</p>
                     <p className="text-zinc-500 mt-2">Please enter your details to register</p>
                 </div>
 
@@ -135,36 +117,11 @@ let Register = () => {
                     </div>
                 )}
                 
-<<<<<<< HEAD
-                <div className="w-full">
-                    <p>Full Name</p>
-                    <input className="border rounded w-full p-2 mt-1" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-                </div>
-                <div className="w-full">
-                    <p>Email</p>
-                    <input className="border rounded w-full p-2 mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
-                <div className="w-full">
-                    <p>Password</p>
-                    <input className="border rounded w-full p-2 mt-1" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                </div>
-                <div className="w-full">
-                    <p>Account Type</p>
-                    <select className="border rounded w-full p-2 mt-1" value={role} onChange={(e) => setRole(e.target.value)}>
-                        <option value="patient">Patient</option>
-                        <option value="doctor">Doctor</option>
-                    </select>
-                </div>
-                
-                <button disabled={loading} className="bg-main text-white w-full py-2 rounded-md mt-4">
-                    {loading ? "Creating account..." : "Create Account"}
-=======
                 <button 
                     disabled={loading} 
-                    className="bg-main text-white w-full py-3 rounded-xl text-lg font-bold mt-4 hover:bg-blue-700 transition-all active:scale-95 disabled:bg-gray-400"
+                    className="bg-blue-600 text-white w-full py-3 rounded-xl text-lg font-bold mt-4 hover:bg-blue-700 transition-all active:scale-95 disabled:bg-gray-400"
                 >
                     {loading ? "Creating Account..." : "Register Now"}
->>>>>>> 0f1442d (edit login & register pages)
                 </button>
 
                 <p className="text-center text-zinc-600 mt-2">
