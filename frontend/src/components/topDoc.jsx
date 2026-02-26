@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchDoctors } from "../redux/slices/doctorSlice.js";
+import { asts } from "../assets/assets.js"
 
 
 const TopDoc = () => {
@@ -30,7 +31,7 @@ const TopDoc = () => {
                 {doctors.slice(0,10).map((item, index) => {
                     return(
                         <div onClick={()=>navg(`/Appint/${item._id}`)} key={index} className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500">
-                            <img className="w-40 h-40 object-cover rounded-full mx-auto bg-blue-50" src={item.img} alt="" />
+                            <img className="w-40 h-40 object-cover rounded-full mx-auto bg-blue-50" src={asts.doc} alt="" />
                             <div className="p-4">
                                 <div className="flex items-center gap-2 text-sm text-center text-green-500">
                                     <p className="w-2 h-2 bg-green-500 rounded-full"></p><p>Available</p>
