@@ -2,6 +2,10 @@ import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
+// استيراد المكتبة الخاصة بالإشعارات
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // استيراد الصفحات الأساسية
 import Home from "./pages/home.jsx";
 import Doctors from "./pages/doctors.jsx"; 
@@ -25,19 +29,19 @@ import Nav from "./components/Nav.jsx";
 import Footer from "./components/footer.jsx";
 
 const App = () => {
-  // جلب بيانات المستخدم والتوكن من الـ Redux
   const { user, token } = useSelector((state) => state.auth);
   const isAuthenticated = Boolean(token && user);
 
   return (
     <div className="mx-3 sm:mx-[12%]">
-      {/* الشريط العلوي */}
+      {/* حاوية الإشعارات تظهر في كل صفحات التطبيق */}
+      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+      
       <Nav />
       
-      {/* حاوية المحتوى الرئيسية */}
       <div className="w-full min-h-[80vh]">
         <Routes>
-          {/* --- مسارات عامة (متاحة للجميع) --- */}
+          {/* --- مسارات عامة --- */}
           <Route path="/" element={<Home />} />
           <Route path="/doctors" element={<Doctors isAdmin={false} />} />
           <Route path="/doctors/:speciality" element={<Doctors isAdmin={false} />} />
@@ -46,15 +50,14 @@ const App = () => {
           <Route path="/appointment/:docID" element={<Appoint />} />
           <Route path="/Appint/:docID" element={<Appoint />} />
           
-          {/* حماية صفحات الدخول: لو مسجل دخول بالفعل يتم توجيهه للرئيسية */}
           <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to='/' />} />
           <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to='/' />} />
 
-          {/* --- مسارات المريض (تتطلب تسجيل دخول) --- */}
+          {/* --- مسارات المريض --- */}
           <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to='/login' />} />
           <Route path="/my-appointments" element={isAuthenticated ? <Appointments /> : <Navigate to='/login' />} />
 
-          {/* --- مسارات الطبيب (تتطلب دور doctor) --- */}
+          {/* --- مسارات الطبيب --- */}
           <Route 
             path="/doctor-dashboard" 
             element={isAuthenticated && user?.role === 'doctor' ? <DoctorDashboard /> : <Navigate to='/login' />} 
@@ -68,7 +71,7 @@ const App = () => {
             element={isAuthenticated && user?.role === 'doctor' ? <DoctorProfile /> : <Navigate to='/login' />} 
           />
 
-          {/* --- مسارات الأدمن (تتطلب دور admin) --- */}
+          {/* --- مسارات الأدمن --- */}
           <Route 
             path="/admin-dashboard" 
             element={isAuthenticated && user?.role === 'admin' ? <AdminDashboard /> : <Navigate to='/login' />} 
@@ -82,7 +85,6 @@ const App = () => {
             element={isAuthenticated && user?.role === 'admin' ? <Doctors isAdmin={true} /> : <Navigate to='/login' />} 
           />
 
-          {/* مسار احتياطي في حال طلب رابط غير موجود */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>

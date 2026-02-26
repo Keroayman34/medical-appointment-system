@@ -4,89 +4,60 @@ import axios from "axios";
 const FRIENDLY_NETWORK_ERROR =
   "Cannot reach server. Make sure backend is running on port 5000.";
 
-// استخدام المسارات النسبية المتوافقة مع الـ Proxy و auth.routes.js
+// استخدام المسارات النسبية المتوافقة مع الـ Proxy
 const API_URL = "/api/auth";
 const USER_API = "/api/users";
 
-// 1. تسجيل الدخول (مطابق لـ loginSchema)
+// 1. تسجيل الدخول
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (userData, { rejectWithValue }) => {
     try {
-      // userData يجب أن يحتوي على { email, password } فقط
       const response = await axios.post(`${API_URL}/login`, userData, {
         timeout: 15000,
       });
-
-      // حفظ التوكن وبيانات المستخدم المستلمة من السيرفر
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-
       return response.data;
     } catch (error) {
-      // استلام رسالة الخطأ المخصصة من السيرفر (مثل: "Invalid email or password")
-      if (error.code === "ECONNABORTED") {
-        return rejectWithValue("Request timed out. Please try again.");
-      }
-      if (!error.response) {
-        return rejectWithValue(FRIENDLY_NETWORK_ERROR);
-      }
+      if (error.code === "ECONNABORTED") return rejectWithValue("Request timed out.");
+      if (!error.response) return rejectWithValue(FRIENDLY_NETWORK_ERROR);
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   },
 );
 
-// 2. إنشاء حساب جديد (مطابق لـ registerSchema)
+// 2. إنشاء حساب جديد
 export const registerUser = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      // userData يجب أن يحتوي على { name, email, password, role }
       const response = await axios.post(`${API_URL}/register`, userData, {
         timeout: 15000,
       });
-
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-
       return response.data;
     } catch (error) {
-      // استلام أخطاء الـ Validation أو تكرار الإيميل
-      if (error.code === "ECONNABORTED") {
-        return rejectWithValue("Request timed out. Please try again.");
-      }
-      if (!error.response) {
-        return rejectWithValue(FRIENDLY_NETWORK_ERROR);
-      }
-      return rejectWithValue(
-        error.response?.data?.details?.[0] ||
-          error.response?.data?.message ||
-          "Registration failed",
-      );
+      if (error.code === "ECONNABORTED") return rejectWithValue("Request timed out.");
+      if (!error.response) return rejectWithValue(FRIENDLY_NETWORK_ERROR);
+      return rejectWithValue(error.response?.data?.message || "Registration failed");
     }
   },
 );
 
-// 3. تحديث بيانات البروفايل الشخصي (يستخدم auth.middleware.js للتحقق)
+// 3. تحديث بيانات البروفايل الشخصي
 export const updateProfile = createAsyncThunk(
   "auth/updateProfile",
   async (formData, { getState, rejectWithValue }) => {
     try {
       const { auth } = getState();
-      const config = {
-        headers: {
-          Authorization: `Bearer ${auth.token}`, // مطلوب بواسطة protect middleware
-        },
-      };
+      const config = { headers: { Authorization: `Bearer ${auth.token}` } };
       const response = await axios.patch(`${USER_API}/me`, formData, config);
       localStorage.setItem("user", JSON.stringify(response.data.user));
       return response.data.user;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.details?.[0] ||
-          error.response?.data?.message ||
-          "Update failed",
-      );
+      return rejectWithValue(error.response?.data?.message || "Update failed");
     }
   },
 );
@@ -101,9 +72,7 @@ export const fetchMyAppointments = createAsyncThunk(
       const response = await axios.get(`${USER_API}/appointments`, config);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch",
-      );
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch");
     }
   },
 );
@@ -115,11 +84,7 @@ export const cancelAppointment = createAsyncThunk(
     try {
       const { auth } = getState();
       const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-      await axios.post(
-        `${USER_API}/cancel-appointment`,
-        { appointmentId },
-        config,
-      );
+      await axios.post(`${USER_API}/cancel-appointment`, { appointmentId }, config);
       return appointmentId;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Cancel failed");
@@ -144,13 +109,17 @@ const authSlice = createSlice({
       localStorage.removeItem("token");
       localStorage.removeItem("user");
     },
+    // دالة تنظيف الخطأ ضرورية لمسح الرسائل القديمة من الإشعارات
+    clearError: (state) => {
+      state.error = null;
+    }
   },
   extraReducers: (builder) => {
     builder
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token;
-        state.user = action.payload.user; // يحتوي على {id, name, email, role}
+        state.user = action.payload.user;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
@@ -189,5 +158,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;
