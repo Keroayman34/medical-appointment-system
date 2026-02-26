@@ -9,5 +9,15 @@ export default defineConfig({
         plugins: [['babel-plugin-react-compiler']],
       },
     }),
-  ],  
+  ],
+  server: {
+    proxy: {
+      // توجيه أي طلب يبدأ بـ /api إلى السيرفر المحلي
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

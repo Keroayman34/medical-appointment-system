@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+<<<<<<< HEAD
 const API_BASE_URL = "http://localhost:5000/api/v1/doctor";
 const DISCOVER_DOCTORS_URL = "http://localhost:5000/api/doctors/discover";
 
@@ -53,6 +54,35 @@ export const fetchDoctorById = createAsyncThunk(
 export const fetchDoctorAppointments = createAsyncThunk(
   "doctor/fetchAppointments",
   async (_, { getState, rejectWithValue }) => {
+=======
+// التعديل الجوهري: نستخدم المسار النسبي فقط عشان الـ Proxy يلقطه
+// شيلنا http://localhost:5000 خالص
+const API_BASE_URL = '/api/doctors'; 
+
+// 1. جلب كل الدكاترة (للمريض)
+export const fetchDoctors = createAsyncThunk('doctor/fetchAll', async (_, { rejectWithValue }) => {
+    try {
+        // جربنا نبعت الطلب لـ /api/doctors
+        const response = await axios.get(`${API_BASE_URL}`); 
+        return response.data.data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data?.message || "Error fetching doctors");
+    }
+});
+
+// 2. جلب بيانات دكتور واحد بالـ ID
+export const fetchDoctorById = createAsyncThunk('doctor/fetchById', async (docId, { rejectWithValue }) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/${docId}`); 
+        return response.data.data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data?.message || "Error fetching doctor details");
+    }
+});
+
+// 3. جلب مواعيد الدكتور المسجل دخول
+export const fetchDoctorAppointments = createAsyncThunk('doctor/fetchAppointments', async (_, { getState, rejectWithValue }) => {
+>>>>>>> 0f1442d (edit login & register pages)
     try {
       const { auth } = getState();
       const config = { headers: { Authorization: `Bearer ${auth.token}` } };
@@ -66,10 +96,15 @@ export const fetchDoctorAppointments = createAsyncThunk(
   },
 );
 
+<<<<<<< HEAD
 // 2. إتمام الموعد
 export const completeAppointment = createAsyncThunk(
   "doctor/completeAppointment",
   async (appointmentId, { getState, rejectWithValue }) => {
+=======
+// 4. إتمام الموعد
+export const completeAppointment = createAsyncThunk('doctor/completeAppointment', async (appointmentId, { getState, rejectWithValue }) => {
+>>>>>>> 0f1442d (edit login & register pages)
     try {
       const { auth } = getState();
       const config = { headers: { Authorization: `Bearer ${auth.token}` } };
@@ -85,6 +120,7 @@ export const completeAppointment = createAsyncThunk(
   },
 );
 
+<<<<<<< HEAD
 // 3. إلغاء موعد (من طرف الدكتور)
 export const cancelDoctorAppointment = createAsyncThunk(
   "doctor/cancelAppointment",
@@ -108,6 +144,10 @@ export const cancelDoctorAppointment = createAsyncThunk(
 export const getDoctorProfile = createAsyncThunk(
   "doctor/getProfile",
   async (_, { getState, rejectWithValue }) => {
+=======
+// 5. بروفايل الدكتور (نفسه)
+export const getDoctorProfile = createAsyncThunk('doctor/getProfile', async (_, { getState, rejectWithValue }) => {
+>>>>>>> 0f1442d (edit login & register pages)
     try {
       const { auth } = getState();
       const config = { headers: { Authorization: `Bearer ${auth.token}` } };
@@ -119,6 +159,7 @@ export const getDoctorProfile = createAsyncThunk(
   },
 );
 
+<<<<<<< HEAD
 // 5. تحديث البروفايل
 export const updateDoctorProfile = createAsyncThunk(
   "doctor/updateProfile",
@@ -209,6 +250,50 @@ const doctorSlice = createSlice({
         },
       );
   },
+=======
+const doctorSlice = createSlice({
+    name: 'doctor',
+    initialState: { 
+        doctors: [],       
+        selectedDoctor: null, 
+        appointments: [], 
+        profile: null, 
+        loading: false, 
+        error: null 
+    },
+    reducers: {
+        clearDoctorState: (state) => { 
+            state.appointments = []; 
+            state.profile = null; 
+            state.doctors = [];
+            state.selectedDoctor = null;
+        }
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchDoctors.fulfilled, (state, action) => {
+                state.doctors = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchDoctorById.fulfilled, (state, action) => {
+                state.selectedDoctor = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchDoctorAppointments.fulfilled, (state, action) => {
+                state.appointments = action.payload;
+                state.loading = false;
+            })
+            .addCase(getDoctorProfile.fulfilled, (state, action) => {
+                state.profile = action.payload;
+                state.loading = false;
+            })
+            .addMatcher(action => action.type.endsWith('/pending'), (state) => { state.loading = true; })
+            .addMatcher(action => action.type.endsWith('/rejected'), (state, action) => { 
+                state.loading = false; 
+                state.error = action.payload;
+            });
+    }
+>>>>>>> 0f1442d (edit login & register pages)
 });
 
 export const { clearDoctorState } = doctorSlice.actions;

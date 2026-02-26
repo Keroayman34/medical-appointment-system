@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchDoctorAppointments, completeAppointment } from '../redux/slices/doctorSlice'
-import { asts } from '../assets/assets'
-import StatCard from '../components/StatCard'
-import AppointmentRow from '../components/AppointmentRow'
+import { fetchDoctorAppointments, completeAppointment } from '../redux/slices/doctorSlice.js'
+import { asts } from '../assets/assets.js'
+import StatCard from '../components/statCard.jsx'
+import AppointmentRow from '../components/appointmentRow.jsx'
 
 const DoctorDashboard = () => {
     const dispatch = useDispatch()

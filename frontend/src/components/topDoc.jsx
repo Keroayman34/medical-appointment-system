@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchDoctors } from "../redux/slices/doctorSlice";
+import { fetchDoctors } from "../redux/slices/doctorSlice.js";
+
 
 const TopDoc = () => {
     const navg = useNavigate();

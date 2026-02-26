@@ -16,7 +16,10 @@ import Register from "./pages/register.jsx";
 // استيراد صفحات الطبيب والأدمن
 import DoctorDashboard from "./pages/doctorDashboard.jsx";
 import DoctorAppointments from "./pages/doctorAppointments.jsx";
+<<<<<<< HEAD
 import DoctorProfile from "./pages/doctorProfile.jsx";
+=======
+>>>>>>> 0f1442d (edit login & register pages)
 import AddDoctor from "./pages/addDoctor.jsx";
 import AdminDashboard from "./pages/adminDasboard.jsx"; 
 
