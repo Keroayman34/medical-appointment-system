@@ -64,7 +64,10 @@ export const bookAppointment = async (req, res, next) => {
     const userId = req.user._id;
     const { doctorId, date, startTime, endTime } = req.body;
 
-    const doctor = await Doctor.findById(doctorId);
+    let doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      doctor = await Doctor.findOne({ user: doctorId });
+    }
     if (!doctor) {
       return res.status(404).json({
         message: "Doctor not found",
@@ -79,7 +82,7 @@ export const bookAppointment = async (req, res, next) => {
     }
 
     const conflict = await Appointment.findOne({
-      doctor: doctorId,
+      doctor: doctor._id,
       date,
       startTime,
       status: { $in: ["pending", "confirmed"] },

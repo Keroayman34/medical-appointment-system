@@ -8,19 +8,28 @@ const availabilitySchema = new mongoose.Schema(
       required: true,
     },
     day: {
-      type: String, 
+      type: String,
       required: true,
+      trim: true,
+      lowercase: true,
     },
     from: {
-      type: String, 
+      type: String,
       required: true,
+      trim: true,
     },
     to: {
-      type: String, 
+      type: String,
       required: true,
+      trim: true,
     },
   },
   { timestamps: true },
+);
+
+availabilitySchema.index(
+  { doctor: 1, day: 1, from: 1, to: 1 },
+  { unique: true },
 );
 
 export const Availability = mongoose.model("Availability", availabilitySchema);

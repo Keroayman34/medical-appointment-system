@@ -10,7 +10,13 @@ const generateToken = (user) => {
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role } = req.body || {};
+
+    if (!name || !email || !password || !role) {
+      const error = new Error("name, email, password and role are required");
+      error.statusCode = 400;
+      return next(error);
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -39,13 +45,26 @@ export const register = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error); 
+    if (error?.code === 11000 && error?.keyPattern?.email === 1) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already registered",
+      });
+    }
+
+    next(error);
   }
 };
 
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
+
+    if (!email || !password) {
+      const error = new Error("email and password are required");
+      error.statusCode = 400;
+      return next(error);
+    }
 
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
@@ -74,6 +93,6 @@ export const login = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error); 
+    next(error);
   }
 };

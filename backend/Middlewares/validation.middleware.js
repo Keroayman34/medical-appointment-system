@@ -1,6 +1,7 @@
 export const validate = (schema) => {
   return (req, res, next) => {
-    const { error } = schema.validate(req.body, { abortEarly: false });
+    const normalizedBody = req.body ?? {};
+    const { error } = schema.validate(normalizedBody, { abortEarly: false });
 
     if (error) {
       const messages = error.details.map((detail) => detail.message);

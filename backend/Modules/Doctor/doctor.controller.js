@@ -130,6 +130,13 @@ export const updateMyDoctorProfile = async (req, res, next) => {
       doctor: updatedDoctor,
     });
   } catch (error) {
+    if (error?.code === 11000 && error?.keyPattern?.email === 1) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already registered",
+      });
+    }
+
     next(error);
   }
 };
