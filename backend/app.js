@@ -10,6 +10,7 @@ import availabilityRoutes from "./Modules/Appointments/availability.routes.js";
 import appointmentRoutes from "./Modules/Appointments/appointment.routes.js";
 import specialtyRoutes from "./Modules/Specialties/specialty.routes.js";
 import userRoutes from "./Modules/User/user.routes.js";
+import notificationRoutes from "./Modules/Notifications/notification.routes.js";
 
 import { globalErrorHandler } from "./Middlewares/error.middleware.js";
 
@@ -49,6 +50,7 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/specialties", specialtyRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(globalErrorHandler);
 

@@ -5,101 +5,147 @@ import { fetchDoctorById } from "../redux/slices/doctorSlice";
 import { bookAppointment } from "../redux/slices/appointmentSlice";
 import { asts } from "../assets/assets.js";
 import RelateDoc from "../components/relateDoc.jsx";
+import axios from "axios";
 
 const Appoint = () => {
-    // 1. استخراج الـ ID والربط مع Redux
     const { docID } = useParams();
     const dispatch = useDispatch();
     const navg = useNavigate();
     
     const { selectedDoctor, loading } = useSelector((state) => state.doctors);
-    const { token } = useSelector((state) => state.auth);
+    const { token, user } = useSelector((state) => state.auth);
+    const isPatient = (user?.role || "").toLowerCase() === "patient";
 
-    // 2. الـ States الخاصة بالـ Slots (نفس الأسماء التي استخدمتها أنت)
-    let dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    let [docSlots, setDocSlots] = useState([]);
-    let [slotIndex, setSlotIndex] = useState(0);
-    let [selectedSlot, setSelectedSlot] = useState(null);
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-    // 3. جلب بيانات الدكتور عند فتح الصفحة
+    const [docSlots, setDocSlots] = useState([]);
+    const [slotIndex, setSlotIndex] = useState(0);
+    const [selectedSlot, setSelectedSlot] = useState(null);
+    const [occupiedSet, setOccupiedSet] = useState(new Set());
+
     useEffect(() => {
         dispatch(fetchDoctorById(docID));
     }, [dispatch, docID]);
 
-    // 4. دالة توليد المواعيد (تعتمد على Availability من السيرفر مع الحفاظ على المنطق الخاص بك)
+    useEffect(() => {
+        const loadOccupiedSlots = async () => {
+            try {
+                const from = new Date();
+                const to = new Date();
+                to.setDate(to.getDate() + 7);
+
+                const { data } = await axios.get(`/api/appointments/doctor/${docID}/occupied`, {
+                    params: {
+                        from: from.toISOString().split("T")[0],
+                        to: to.toISOString().split("T")[0],
+                    },
+                });
+
+                const keySet = new Set(
+                    (data.occupiedSlots || []).map((item) => `${item.date}_${item.startTime}`),
+                );
+                setOccupiedSet(keySet);
+            } catch {
+                setOccupiedSet(new Set());
+            }
+        };
+
+        loadOccupiedSlots();
+    }, [docID]);
+
+    const toMinutes = (timeValue) => {
+        const [hours, minutes] = timeValue.split(":").map(Number);
+        return (hours * 60) + minutes;
+    };
+
+    const minutesToHHmm = (minutes) => {
+        const hours = String(Math.floor(minutes / 60)).padStart(2, "0");
+        const mins = String(minutes % 60).padStart(2, "0");
+        return `${hours}:${mins}`;
+    };
+
+    const toDisplayRange = (startHHmm, endHHmm) => {
+        const [sh, sm] = startHHmm.split(":").map(Number);
+        const [eh, em] = endHHmm.split(":").map(Number);
+        const startDate = new Date();
+        startDate.setHours(sh, sm, 0, 0);
+        const endDate = new Date();
+        endDate.setHours(eh, em, 0, 0);
+        return `${startDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} - ${endDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+    };
+
     const getSlots = () => {
-        if (!selectedDoctor || !selectedDoctor.availabilities) return;
+        if (!selectedDoctor) return;
         
         setDocSlots([]);
-        let today = new Date();
-        let allSlots = [];
+        const today = new Date();
+        const allSlots = [];
 
         for (let i = 0; i < 7; i++) {
-            let currentDate = new Date(today);
+            const currentDate = new Date(today);
             currentDate.setDate(today.getDate() + i);
-            let dayName = dayNames[currentDate.getDay()];
+            const dayNameLower = dayNames[currentDate.getDay()].toLowerCase();
+            const dayConfigs = (selectedDoctor.availabilities || []).filter((item) => item.day === dayNameLower);
+            const dateKey = currentDate.toISOString().split("T")[0];
 
-            // البحث عن مواعيد هذا اليوم في بيانات الدكتور القادمة من الباك إيند
-            const dayConfig = selectedDoctor.availabilities.find(a => a.day === dayName);
-            let slots = [];
+            const ranges = dayConfigs.flatMap((config) => {
+                    const startMinutes = toMinutes(config.from);
+                    const endMinutes = toMinutes(config.to);
+                    const output = [];
 
-            if (dayConfig) {
-                let startHour = parseInt(dayConfig.from.split(':')[0]);
-                let endHour = parseInt(dayConfig.to.split(':')[0]);
-
-                let curuntDate = new Date(currentDate);
-                curuntDate.setHours(startHour, 0, 0, 0);
-
-                let endTime = new Date(currentDate);
-                endTime.setHours(endHour, 0, 0, 0);
-
-                // منطق الوقت الحالي (لا يظهر مواعيد مرت في نفس اليوم)
-                if (today.getDate() === currentDate.getDate()) {
-                    let nextHour = today.getHours() + 1;
-                    if (nextHour > startHour) {
-                        curuntDate.setHours(nextHour);
+                    for (let cursor = startMinutes; cursor + 60 <= endMinutes; cursor += 60) {
+                        output.push([
+                            minutesToHHmm(cursor),
+                            minutesToHHmm(cursor + 60),
+                        ]);
                     }
-                }
 
-                while (curuntDate < endTime) {
-                    const slotStart = new Date(curuntDate);
-                    const slotEnd = new Date(curuntDate);
-                    slotEnd.setMinutes(slotEnd.getMinutes() + 30);
+                    return output;
+                });
 
-                    const formatToHHmm = (timeDate) => {
-                        const hh = String(timeDate.getHours()).padStart(2, '0');
-                        const mm = String(timeDate.getMinutes()).padStart(2, '0');
-                        return `${hh}:${mm}`;
+            const slots = ranges
+                .map(([startTime, endTime]) => {
+                    const slotKey = `${dateKey}_${startTime}`;
+                    return {
+                        date: dateKey,
+                        dateObj: new Date(currentDate),
+                        startTime,
+                        endTime,
+                        displayTime: toDisplayRange(startTime, endTime),
+                        isBooked: occupiedSet.has(slotKey),
                     };
+                })
+                .filter((slot) => {
+                    const now = new Date();
+                    const slotDateTime = new Date(slot.dateObj);
+                    const [h, m] = slot.startTime.split(":").map(Number);
+                    slotDateTime.setHours(h, m, 0, 0);
+                    return slotDateTime > now;
+                });
 
-                    let formatTime = slotStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    slots.push({
-                        date: new Date(slotStart),
-                        displayTime: formatTime,
-                        startTime: formatToHHmm(slotStart),
-                        endTime: formatToHHmm(slotEnd),
-                    });
-                    curuntDate.setMinutes(curuntDate.getMinutes() + 30);
-                }
-            }
             allSlots.push(slots);
         }
+
         setDocSlots(allSlots);
     };
 
     useEffect(() => {
-        if (selectedDoctor) {
-            getSlots();
-        }
-    }, [selectedDoctor]);
+        getSlots();
+    }, [selectedDoctor, occupiedSet]);
 
-    // دالة الحجز
+    const selectedDaySlots = docSlots[slotIndex] || [];
+    const bookedSlotsInSelectedDay = selectedDaySlots.filter((slot) => slot.isBooked);
+
     const handleBooking = async () => {
         if (!token) {
             alert("Please login to book an appointment");
             return navg('/login');
         }
+        if (!isPatient) {
+            return alert("Booking is allowed for patients only");
+        }
         if (!selectedSlot) return alert("Please select a time slot");
+        if (selectedSlot.isBooked) return alert("This slot is already booked");
 
         const appointmentData = {
             doctorId: docID,
@@ -107,7 +153,16 @@ const Appoint = () => {
             startTime: selectedSlot.startTime,
             endTime: selectedSlot.endTime,
         };
-        dispatch(bookAppointment(appointmentData));
+
+        const result = await dispatch(bookAppointment(appointmentData));
+        if (result.meta.requestStatus === "fulfilled") {
+            setOccupiedSet((prev) => new Set(prev).add(`${selectedSlot.date}_${selectedSlot.startTime}`));
+            alert("Appointment booked successfully");
+            navg("/my-appointments");
+            return;
+        }
+
+        alert(result.payload || "Could not book this slot");
     };
 
     if (loading || !selectedDoctor) return <p className="text-center py-20">Loading...</p>;
@@ -142,7 +197,6 @@ const Appoint = () => {
                 </div>
             </div>
 
-            {/* --- الجزء السفلي: الـ Slots (نفس تصميمك وحركات الـ Scroll) --- */}
             <div className="sm:ml-72 sm:pl-6 mt-6 font-medium text-gray-700">
                 <p>Booking Times</p>
                 
@@ -155,33 +209,47 @@ const Appoint = () => {
                             className={`text-center py-6 min-w-16 rounded-full cursor-pointer transition-all ${slotIndex === index ? 'bg-main text-white shadow-md' : 'border border-gray-200 hover:bg-gray-50'}`}
                         >
                             {/* عرض اسم اليوم ورقمه */}
-                            <p>{daySlots[0] && dayNames[daySlots[0].date.getDay()].substring(0, 3)}</p>
-                            <p>{daySlots[0] && daySlots[0].date.getDate()}</p>
+                            <p>{daySlots[0] && dayNames[daySlots[0].dateObj.getDay()].substring(0, 3)}</p>
+                            <p>{daySlots[0] && daySlots[0].dateObj.getDate()}</p>
                         </div>
                     ))}
                 </div>
                 
-                {/* اختيار الساعات */}
                 <div className="flex items-center gap-3 w-full overflow-x-scroll mt-4 pb-2">
                     {docSlots.length > 0 && docSlots[slotIndex]?.length > 0 ? (
-                        docSlots[slotIndex].map((slot, index) => (
-                            <p 
+                        selectedDaySlots.map((slot, index) => (
+                            <button
+                                type="button"
                                 key={index} 
-                                onClick={() => setSelectedSlot(slot)} 
-                                className={`text-sm font-light flex-shrink-0 px-5 py-2 rounded-full cursor-pointer transition-all ${selectedSlot?.startTime === slot.startTime ? 'bg-main text-white shadow-sm' : 'text-gray-400 border border-gray-200'}`} 
+                                onClick={() => !slot.isBooked && setSelectedSlot(slot)}
+                                className={`text-sm font-light flex-shrink-0 px-4 py-2 rounded-full transition-all border flex items-center gap-2 ${slot.isBooked ? 'text-red-500 border-red-300 bg-red-50 cursor-not-allowed' : selectedSlot?.date === slot.date && selectedSlot?.startTime === slot.startTime ? 'bg-main text-white border-main shadow-sm' : 'text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                             >
-                                {slot.displayTime.toLowerCase()}
-                            </p>
+                                <span className={`w-2.5 h-2.5 rounded-full ${slot.isBooked ? 'bg-red-500' : 'bg-green-500'}`}></span>
+                                <span>{slot.displayTime}</span>
+                            </button>
                         ))
                     ) : (
                         <p className="text-sm text-red-400 py-4">No slots available for this day.</p>
                     )}
                 </div>
 
+                {bookedSlotsInSelectedDay.length > 0 && (
+                    <p className="mt-2 text-sm text-red-500">
+                        Booked on this doctor/day: {bookedSlotsInSelectedDay.map((slot) => slot.displayTime).join(" • ")}
+                    </p>
+                )}
+
+                {token && !isPatient && (
+                    <p className="mt-2 text-sm text-amber-600">
+                        View only: booking is available for patient accounts.
+                    </p>
+                )}
+
                 {/* زرار الحجز بنفس الـ Classes الخاصة بك */}
                 <button 
                     onClick={handleBooking} 
-                    className="my-6 px-14 py-3 text-sm font-light rounded-full bg-main text-white hover:scale-105 transition-all"
+                    disabled={token && !isPatient}
+                    className={`my-6 px-14 py-3 text-sm font-light rounded-full transition-all ${token && !isPatient ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-main text-white hover:scale-105'}`}
                 >
                     Book Appointment
                 </button>

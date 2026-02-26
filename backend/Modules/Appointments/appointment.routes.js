@@ -8,6 +8,7 @@ import {
   updateAppointmentStatus,
   addConsultationNotes,
   getAllAppointments,
+  getDoctorOccupiedSlots,
 } from "./appointment.controller.js";
 
 import { protect, allowRoles } from "../../Middlewares/auth.middleware.js";
@@ -20,6 +21,8 @@ import {
 } from "./appointment.validation.js";
 
 const router = Router();
+
+router.get("/doctor/:doctorId/occupied", getDoctorOccupiedSlots);
 
 router.post(
   "/",

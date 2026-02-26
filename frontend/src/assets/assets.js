@@ -17,71 +17,81 @@ import info from "./info_icon.svg";
 import abot from "./about_image.png";
 import cont from "./contact_image.png";
 
+export const asts = {
+  doc,
+  logo,
+  dropdown_icon,
+  arrow,
+  head,
+  group,
+  prof,
+  appoint,
+  verf,
+  info,
+  abot,
+  cont,
+};
 
-export const asts = {doc, logo , dropdown_icon, arrow, head, group, prof, appoint, verf, info, abot, cont};
+export const specialityData = [
+  {
+    speciality: "General physician",
+    img: General_physician,
+  },
 
-export const specialityData =[
-    {
-        speciality: "General physician",
-        img: General_physician
-    },
+  {
+    speciality: "Genacologist",
+    img: Gynecologist,
+  },
 
-    {
-        speciality: "Genacologist",
-        img: Gynecologist
-    },
+  {
+    speciality: "Gastroenterologist",
+    img: Gast,
+  },
+  {
+    speciality: "Neurologist",
+    img: Neur,
+  },
+  {
+    speciality: "Dermatologist",
+    img: Derma,
+  },
+  {
+    speciality: "Pediatrician",
+    img: Pedia,
+  },
+];
 
-    {
-        speciality: "Gastroenterologist",
-        img: Gast
-    },
-    {
-        speciality: "Neurologist",
-        img: Neur
-    },
-    {
-        speciality: "Dermatologist",
-        img: Derma
-    },
-    {
-        speciality: "Pediatrician",
-        img: Pedia
-    },
-
-]
-
-
-const doctors =[
-    {
-        _id: 0,
-        name: "Dr. Ahmed",
-        img: doc1,
-        speciality: "General physician",
-        degree: "MBBS",
-        experiance: "6 months",
-        fees: 100,
-        address: "25 Mohafza street - Assiut"
-    },
-    {
-        _id: 1,
-        name: "Dr. Ahmed",
-        img: doc2,
-        speciality: "General physician",
-        degree: "MBBS",
-        experiance: "6 months",
-        fees: 100,
-        address: "25 Mohafza street - Assiut"
-    },
-    {
-        _id: 2,
-        name: "Dr. Ahmed",
-        img: doc4,
-        speciality: "General physician",
-        degree: "MBBS",
-        experiance: "6 months",
-        fees: 100,
-        address: "25 Mohafza street - Assiut"
-    }
-]
+const doctors = [
+  {
+    _id: 0,
+    name: "Dr. Ahmed",
+    img: doc,
+    speciality: "General physician",
+    degree: "MBBS",
+    experiance: "6 months",
+    fees: 100,
+    address: "25 Mohafza street - Assiut",
+  },
+  {
+    _id: 1,
+    name: "Dr. Ahmed",
+    img: doc,
+    speciality: "General physician",
+    degree: "MBBS",
+    experiance: "6 months",
+    fees: 100,
+    address: "25 Mohafza street - Assiut",
+  },
+  {
+    _id: 2,
+    name: "Dr. Ahmed",
+    img: doc,
+    speciality: "General physician",
+    degree: "MBBS",
+    experiance: "6 months",
+    fees: 100,
+    address: "25 Mohafza street - Assiut",
+  },
+];
 
 export default doctors;

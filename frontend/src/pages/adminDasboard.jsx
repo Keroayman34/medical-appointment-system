@@ -1,127 +1,151 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { getAllDoctors, changeAvailability, deleteDoctor } from "../redux/slices/adminSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+    approveDoctorByAdmin,
+    createSpecialty,
+    deleteSpecialty,
+    fetchDoctorModeration,
+    fetchSpecialties,
+    rejectDoctorByAdmin,
+} from "../redux/slices/adminSlice";
 
-const Doctors = ({ isAdmin = false }) => {
-    const { speciality } = useParams();
-    const navg = useNavigate();
+const AdminDashboard = () => {
     const dispatch = useDispatch();
-    
-    const { doctors, loading } = useSelector((state) => state.admin);
-    const [filterDoc, setFilterDoc] = useState([]);
+    const { specialties, doctorModeration, loading, error } = useSelector((state) => state.admin);
+
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
 
     useEffect(() => {
-        dispatch(getAllDoctors());
+        dispatch(fetchSpecialties());
+        dispatch(fetchDoctorModeration());
     }, [dispatch]);
 
-    useEffect(() => {
-        if (speciality) {
-            setFilterDoc(doctors.filter(d => d.specialty === speciality));
-        } else {
-            setFilterDoc(doctors);
+    const getDoctorStatus = (doctor) => {
+        if (doctor?.status) return doctor.status;
+        if (doctor?.isApproved) return "approved";
+        return "pending";
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (!name.trim()) return;
+
+        const result = await dispatch(createSpecialty({
+            name: name.trim(),
+            description: description.trim(),
+        }));
+
+        if (result.meta.requestStatus === "fulfilled") {
+            setName("");
+            setDescription("");
         }
-    }, [doctors, speciality]);
+    };
 
-    // مصفوفة التخصصات لعرضها كأزرار علوية
-    const specialities = [
-        'General physician', 'Gynecologist', 'Dermatologist', 
-        'Pediatricians', 'Neurologist', 'Gastroenterologist'
-    ];
-
-    if (loading) return <p className="text-center py-20 text-xl font-medium">Loading Doctors List...</p>;
-    
     return (
-        <div className="p-5 max-w-7xl mx-auto">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center sm:text-left">
-                {isAdmin ? "Manage Doctors Control Panel" : "Browse Doctors by Speciality"}
-            </h1>
+        <div className="p-5 max-w-4xl mx-auto">
+            <h1 className="text-2xl font-bold text-gray-800 mb-6">Admin Specialty Management</h1>
 
-            {/* --- أزرار التخصصات العلوية (بديلة للـ Side Bar) --- */}
-            {!isAdmin && (
-                <div className="flex flex-wrap justify-center sm:justify-start gap-3 mb-10">
-                    <button 
-                        onClick={() => navg('/doctors')}
-                        className={`px-4 py-2 rounded-full border text-sm transition-all ${!speciality ? 'bg-main text-white border-main' : 'bg-white text-gray-600 hover:border-main'}`}
-                    >
-                        All Doctors
-                    </button>
-                    {specialities.map((spec, index) => (
-                        <button 
-                            key={index}
-                            onClick={() => speciality === spec ? navg('/doctors') : navg(`/doctors/${spec}`)}
-                            className={`px-4 py-2 rounded-full border text-sm transition-all ${speciality === spec ? 'bg-main text-white border-main' : 'bg-white text-gray-600 hover:border-main'}`}
-                        >
-                            {spec}
-                        </button>
-                    ))}
+            <form onSubmit={handleSubmit} className="bg-white border rounded-xl p-5 mb-6">
+                <p className="font-semibold text-gray-700 mb-3">Add New Specialty</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                        className="border rounded-lg px-3 py-2"
+                        placeholder="Specialty Name"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        required
+                    />
+                    <input
+                        className="border rounded-lg px-3 py-2"
+                        placeholder="Description"
+                        value={description}
+                        onChange={(event) => setDescription(event.target.value)}
+                    />
                 </div>
-            )}
+                <button
+                    type="submit"
+                    className="mt-4 px-6 py-2 rounded-full bg-main text-white"
+                    disabled={loading}
+                >
+                    {loading ? "Saving..." : "Add Specialty"}
+                </button>
+            </form>
 
-            {/* --- شبكة عرض الدكاترة بعرض الشاشة الكامل --- */}
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {filterDoc.map((item, index) => (
-                    <div 
-                        key={index} 
-                        className="border border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:translate-y-[-5px] transition-all duration-300 bg-white"
-                    >
-                        <div className="relative">
-                            <img 
-                                onClick={() => !isAdmin && navg(`/appointment/${item._id}`)} 
-                                className="w-full h-52 object-cover bg-indigo-50" 
-                                src={item.image} 
-                                alt={item.name} 
-                            />
-                            {/* علامة التوفر الصغيرة */}
-                            {!isAdmin && (
-                                <div className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm ${item.available ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                    {item.available ? '● Available' : '● Busy'}
+            <div className="bg-white border rounded-xl p-5">
+                <p className="font-semibold text-gray-700 mb-3">All Specialties</p>
+                {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+
+                {specialties?.length ? (
+                    <div className="space-y-2">
+                        {specialties.map((item) => (
+                            <div key={item._id} className="flex items-center justify-between border rounded-lg px-3 py-2">
+                                <div>
+                                    <p className="font-medium text-gray-800">{item.name}</p>
+                                    {item.description ? <p className="text-xs text-gray-500">{item.description}</p> : null}
                                 </div>
-                            )}
-                        </div>
-                        
-                        <div className="p-5">
-                            <p onClick={() => !isAdmin && navg(`/appointment/${item._id}`)} className="text-lg font-bold text-gray-900 truncate">{item.name}</p>
-                            <p className="text-main text-xs font-semibold uppercase tracking-wider mb-3">{item.specialty}</p>
-                            
-                            {isAdmin ? (
-                                <div className="space-y-3 pt-3 border-t">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-500 font-bold">Status:</span>
-                                        <div className="flex items-center gap-2">
-                                            <input 
-                                                type="checkbox" 
-                                                className="w-4 h-4 accent-main cursor-pointer"
-                                                checked={item.available} 
-                                                onChange={() => dispatch(changeAvailability(item._id))} 
-                                            />
-                                            <span className="text-xs text-gray-600">Active</span>
-                                        </div>
-                                    </div>
-                                    <button 
-                                        onClick={() => { if(window.confirm("Are you sure?")) dispatch(deleteDoctor(item._id)) }}
-                                        className="w-full py-2 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-600 hover:text-white transition-all"
-                                    >
-                                        Delete Doctor
-                                    </button>
-                                </div>
-                            ) : (
-                                <button onClick={() => navg(`/appointment/${item._id}`)} className="w-full mt-2 py-2 border border-main text-main rounded-lg text-xs font-bold hover:bg-main hover:text-white transition-all">
-                                    Book Visit
+                                <button
+                                    className="text-red-600 text-sm"
+                                    onClick={() => dispatch(deleteSpecialty(item._id))}
+                                >
+                                    Delete
                                 </button>
-                            )}
-                        </div>
+                            </div>
+                        ))}
                     </div>
-                ))}
+                ) : (
+                    <p className="text-gray-500 text-sm">No specialties found.</p>
+                )}
             </div>
 
-            {filterDoc.length === 0 && (
-                <div className="text-center py-20">
-                    <p className="text-gray-400 text-lg">No doctors found in this specialty.</p>
-                </div>
-            )}
+            <div className="bg-white border rounded-xl p-5 mt-6">
+                <p className="font-semibold text-gray-700 mb-3">Doctors Moderation Status</p>
+
+                {doctorModeration?.length ? (
+                    <div className="space-y-2">
+                        {doctorModeration.map((doctor) => {
+                            const status = getDoctorStatus(doctor);
+                            const badgeClass =
+                                status === "approved"
+                                    ? "bg-green-100 text-green-700"
+                                    : status === "rejected"
+                                        ? "bg-red-100 text-red-700"
+                                        : "bg-yellow-100 text-yellow-700";
+
+                            return (
+                                <div key={doctor._id} className="border rounded-lg px-3 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                    <div>
+                                        <p className="font-medium text-gray-800">{doctor?.user?.name || "Doctor"}</p>
+                                        <p className="text-xs text-gray-500">{doctor?.specialty?.name || "No specialty"}</p>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${badgeClass}`}>{status}</span>
+                                        <button
+                                            className="px-3 py-1 text-xs rounded bg-green-600 text-white disabled:bg-gray-300"
+                                            disabled={status === "approved" || loading}
+                                            onClick={() => dispatch(approveDoctorByAdmin(doctor._id))}
+                                        >
+                                            Approve
+                                        </button>
+                                        <button
+                                            className="px-3 py-1 text-xs rounded bg-red-600 text-white disabled:bg-gray-300"
+                                            disabled={status === "rejected" || loading}
+                                            onClick={() => dispatch(rejectDoctorByAdmin(doctor._id))}
+                                        >
+                                            Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <p className="text-gray-500 text-sm">No doctors found.</p>
+                )}
+            </div>
         </div>
     );
 };
 
-export default Doctors;
+export default AdminDashboard;

@@ -6,16 +6,16 @@ import {
   deleteSpecialty,
 } from "./specialty.controller.js";
 
-import { protect, allowRoles } from "../../Middlewares/auth.middleware.js";
+import { protect, allowSuperAdmin } from "../../Middlewares/auth.middleware.js";
 
 const router = Router();
 
 router.get("/", getAllSpecialties);
 
-router.post("/", protect, allowRoles("admin"), createSpecialty);
+router.post("/", protect, allowSuperAdmin(), createSpecialty);
 
-router.put("/:id", protect, allowRoles("admin"), updateSpecialty);
+router.put("/:id", protect, allowSuperAdmin(), updateSpecialty);
 
-router.delete("/:id", protect, allowRoles("admin"), deleteSpecialty);
+router.delete("/:id", protect, allowSuperAdmin(), deleteSpecialty);
 
 export default router;

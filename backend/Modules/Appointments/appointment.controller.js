@@ -1,7 +1,7 @@
 import { Appointment } from "../../Database/Models/appointment.model.js";
 import Doctor from "../../Database/Models/doctor.model.js";
 import { Patient } from "../../Database/Models/patient.model.js";
-import { sendAppointmentNotificationEmail } from "../../Utils/sendEmail.js";
+import { notifyAppointmentParticipants } from "../../Utils/notification.service.js";
 
 const isDuplicateSlotError = (error) => {
   return (
@@ -27,36 +27,11 @@ const notifyAppointmentParties = async ({ appointmentId, action }) => {
 
   if (!appointment) return;
 
-  const patientEmail = appointment.patient?.user?.email;
-  const patientName = appointment.patient?.user?.name;
-  const doctorEmail = appointment.doctor?.user?.email;
-  const doctorName = appointment.doctor?.user?.name;
-
-  const emailJobs = [];
-
-  if (patientEmail) {
-    emailJobs.push(
-      sendAppointmentNotificationEmail({
-        to: patientEmail,
-        recipientName: patientName,
-        action,
-        appointment,
-      }),
-    );
-  }
-
-  if (doctorEmail) {
-    emailJobs.push(
-      sendAppointmentNotificationEmail({
-        to: doctorEmail,
-        recipientName: doctorName,
-        action,
-        appointment,
-      }),
-    );
-  }
-
-  await Promise.allSettled(emailJobs);
+  await notifyAppointmentParticipants({
+    appointment,
+    action,
+    status: appointment.status,
+  });
 };
 
 export const bookAppointment = async (req, res, next) => {
@@ -375,7 +350,7 @@ export const updateAppointmentStatus = async (req, res, next) => {
 
     notifyAppointmentParties({
       appointmentId: appointment._id,
-      action: `updated to ${status}`,
+      action: "status_updated",
     }).catch((notificationError) => {
       console.error(
         "Failed to send status notification:",
@@ -425,6 +400,16 @@ export const addConsultationNotes = async (req, res, next) => {
     appointment.consultationNotes = consultationNotes;
     await appointment.save();
 
+    notifyAppointmentParties({
+      appointmentId: appointment._id,
+      action: "consultation_notes_added",
+    }).catch((notificationError) => {
+      console.error(
+        "Failed to send consultation notes notification:",
+        notificationError.message,
+      );
+    });
+
     return res.status(200).json({
       message: "Consultation notes updated successfully",
       appointment,
@@ -446,6 +431,51 @@ export const getAllAppointments = async (req, res, next) => {
     return res.status(200).json({
       message: "All appointments fetched successfully",
       appointments,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getDoctorOccupiedSlots = async (req, res, next) => {
+  try {
+    const { doctorId } = req.params;
+    const { from, to } = req.query;
+
+    let doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      doctor = await Doctor.findOne({ user: doctorId });
+    }
+
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const startDate = from ? new Date(from) : new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = to ? new Date(to) : new Date(startDate);
+    if (!to) {
+      endDate.setDate(endDate.getDate() + 7);
+    }
+    endDate.setHours(23, 59, 59, 999);
+
+    const appointments = await Appointment.find({
+      doctor: doctor._id,
+      date: { $gte: startDate, $lte: endDate },
+      status: { $in: ["pending", "confirmed"] },
+    }).select("date startTime endTime status");
+
+    const occupiedSlots = appointments.map((item) => ({
+      date: item.date.toISOString().split("T")[0],
+      startTime: item.startTime,
+      endTime: item.endTime,
+      status: item.status,
+    }));
+
+    return res.status(200).json({
+      message: "Occupied slots fetched successfully",
+      occupiedSlots,
     });
   } catch (error) {
     next(error);

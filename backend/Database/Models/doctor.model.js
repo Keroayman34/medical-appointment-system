@@ -35,7 +35,11 @@ const doctorSchema = new mongoose.Schema(
       default: 0,
     },
 
-  
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
 
     isApproved: {
       type: Boolean,

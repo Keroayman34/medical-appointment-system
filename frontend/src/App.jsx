@@ -31,6 +31,11 @@ import Footer from "./components/footer.jsx";
 const App = () => {
   const { user, token } = useSelector((state) => state.auth);
   const isAuthenticated = Boolean(token && user);
+  const SUPER_ADMIN_ID = "699fea2ba56f11a0a1310905";
+  const isSuperAdmin =
+    isAuthenticated &&
+    user?.role === "admin" &&
+    String(user?.id) === SUPER_ADMIN_ID;
 
   return (
     <div className="mx-3 sm:mx-[12%]">
@@ -74,15 +79,15 @@ const App = () => {
           {/* --- مسارات الأدمن --- */}
           <Route 
             path="/admin-dashboard" 
-            element={isAuthenticated && user?.role === 'admin' ? <AdminDashboard /> : <Navigate to='/login' />} 
+            element={isSuperAdmin ? <AdminDashboard /> : <Navigate to='/' />} 
           />
           <Route 
             path="/add-doctor" 
-            element={isAuthenticated && user?.role === 'admin' ? <AddDoctor /> : <Navigate to='/login' />} 
+            element={isSuperAdmin ? <AddDoctor /> : <Navigate to='/' />} 
           />
           <Route 
             path="/admin-all-doctors" 
-            element={isAuthenticated && user?.role === 'admin' ? <Doctors isAdmin={true} /> : <Navigate to='/login' />} 
+            element={isSuperAdmin ? <Doctors isAdmin={true} /> : <Navigate to='/' />} 
           />
 
           <Route path="*" element={<Navigate to="/" />} />

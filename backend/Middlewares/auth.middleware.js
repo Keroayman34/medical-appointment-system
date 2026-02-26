@@ -54,3 +54,21 @@ export const allowRoles = (...roles) => {
     next();
   };
 };
+
+export const allowSuperAdmin = () => {
+  return (req, res, next) => {
+    if (req.user.role !== "admin") {
+      const err = new Error("Access denied");
+      err.statusCode = 403;
+      return next(err);
+    }
+
+    if (String(req.user._id) !== String(config.SUPER_ADMIN_ID)) {
+      const err = new Error("Only super admin can access this resource");
+      err.statusCode = 403;
+      return next(err);
+    }
+
+    next();
+  };
+};

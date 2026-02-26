@@ -37,6 +37,8 @@ export const createDoctorProfile = async (req, res, next) => {
       phone,
       fees,
       experienceYears,
+      status: "pending",
+      isApproved: false,
     });
 
     res.status(201).json({
@@ -221,10 +223,14 @@ export const discoverDoctors = async (req, res, next) => {
 
 export const getPendingDoctors = async (req, res, next) => {
   try {
-    const doctors = await Doctor.find({ isApproved: false }).populate(
-      "user",
-      "name email",
-    );
+    const doctors = await Doctor.find({
+      $or: [
+        { status: "pending" },
+        { status: { $exists: false }, isApproved: false },
+      ],
+    })
+      .populate("user", "name email")
+      .populate("specialty", "name description");
     res.status(200).json(doctors);
   } catch (error) {
     next(error);
@@ -235,7 +241,7 @@ export const approveDoctor = async (req, res, next) => {
   try {
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
-      { isApproved: true },
+      { isApproved: true, status: "approved" },
       { new: true },
     );
 
@@ -255,7 +261,7 @@ export const rejectDoctor = async (req, res, next) => {
   try {
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
-      { isApproved: false },
+      { isApproved: false, status: "rejected" },
       { new: true },
     );
 

@@ -7,6 +7,11 @@ import { logout } from '../redux/slices/authSlice.js';
 const Nav = () => {
     const { user, token } = useSelector(state => state.auth);
     const isAuthenticated = Boolean(token && user);
+    const SUPER_ADMIN_ID = "699fea2ba56f11a0a1310905";
+    const isSuperAdmin =
+        isAuthenticated &&
+        user?.role === 'admin' &&
+        String(user?.id) === SUPER_ADMIN_ID;
     const dispatch = useDispatch();
     const navg = useNavigate();
 
@@ -44,7 +49,7 @@ const Nav = () => {
                 )}
 
                 {/* روابط الأدمن فقط */}
-                {isAuthenticated && user?.role === 'admin' && (
+                {isSuperAdmin && (
                     <>
                         <NavLink to="/admin-dashboard" className={linkStyle}><li className="text-main font-bold italic">Admin Panel</li></NavLink>
                         <NavLink to="/add-doctor" className={linkStyle}><li>Add Doctor</li></NavLink>

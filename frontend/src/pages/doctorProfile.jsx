@@ -7,6 +7,7 @@ import axios from 'axios'
 const DoctorProfile = () => {
     const dispatch = useDispatch()
     const { profile, loading, error } = useSelector(state => state.doctors)
+    const { token } = useSelector(state => state.auth)
 
     const MAX_IMAGE_SIZE = 2 * 1024 * 1024
     const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
@@ -15,6 +16,26 @@ const DoctorProfile = () => {
     const [uploadError, setUploadError] = useState('')
     const [docData, setDocData] = useState({})
     const [specialties, setSpecialties] = useState([])
+    const [availability, setAvailability] = useState([])
+    const [availabilityLoading, setAvailabilityLoading] = useState(false)
+    const [availabilityError, setAvailabilityError] = useState('')
+    const [slotForm, setSlotForm] = useState({
+        day: 'monday',
+        from: '17:00',
+        to: '18:00',
+    })
+
+    const dayOptions = [
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+    ]
+
+    const toLabel = (value) => value.charAt(0).toUpperCase() + value.slice(1)
 
     useEffect(() => {
         dispatch(getDoctorProfile())
@@ -51,6 +72,61 @@ const DoctorProfile = () => {
             })
         }
     }, [profile])
+
+    useEffect(() => {
+        const loadAvailability = async () => {
+            if (!token) return
+            setAvailabilityLoading(true)
+            setAvailabilityError('')
+
+            try {
+                const { data } = await axios.get('/api/availability/me', {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                setAvailability(data.availability || [])
+            } catch (err) {
+                setAvailabilityError(err?.response?.data?.message || 'Failed to load availability')
+                setAvailability([])
+            } finally {
+                setAvailabilityLoading(false)
+            }
+        }
+
+        loadAvailability()
+    }, [token])
+
+    const handleAddAvailability = async () => {
+        if (!token) return
+
+        try {
+            setAvailabilityError('')
+            const { data } = await axios.post(
+                '/api/availability',
+                slotForm,
+                { headers: { Authorization: `Bearer ${token}` } },
+            )
+            setAvailability((prev) => [...prev, data.availability].sort((a, b) => {
+                if (a.day === b.day) return a.from.localeCompare(b.from)
+                return a.day.localeCompare(b.day)
+            }))
+        } catch (err) {
+            setAvailabilityError(err?.response?.data?.message || 'Failed to add availability')
+        }
+    }
+
+    const handleDeleteAvailability = async (slotId) => {
+        if (!token) return
+
+        try {
+            setAvailabilityError('')
+            await axios.delete(`/api/availability/${slotId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            setAvailability((prev) => prev.filter((item) => item._id !== slotId))
+        } catch (err) {
+            setAvailabilityError(err?.response?.data?.message || 'Failed to delete availability')
+        }
+    }
 
     const handleImageUpload = (e) => {
         const file = e.target.files?.[0]
@@ -239,6 +315,83 @@ const DoctorProfile = () => {
                         </div>
 
                         <p className='text-sm text-gray-500 mt-3'>Approval Status: {profile.isApproved ? 'Approved' : 'Pending approval'}</p>
+
+                        <div className='mt-6 border rounded-xl p-4 bg-gray-50'>
+                            <p className='text-lg font-semibold text-gray-800'>Availability Schedule</p>
+                            <p className='text-xs text-gray-500 mt-1'>Define days and time ranges when you are available for booking.</p>
+
+                            <div className='grid grid-cols-1 md:grid-cols-4 gap-3 mt-4'>
+                                <div>
+                                    <p className='text-xs mb-1 text-gray-600'>Day</p>
+                                    <select
+                                        className='border px-2 py-2 rounded w-full'
+                                        value={slotForm.day}
+                                        onChange={(e) => setSlotForm((prev) => ({ ...prev, day: e.target.value }))}
+                                    >
+                                        {dayOptions.map((day) => (
+                                            <option key={day} value={day}>{toLabel(day)}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <p className='text-xs mb-1 text-gray-600'>From</p>
+                                    <input
+                                        type='time'
+                                        className='border px-2 py-2 rounded w-full'
+                                        value={slotForm.from}
+                                        onChange={(e) => setSlotForm((prev) => ({ ...prev, from: e.target.value }))}
+                                    />
+                                </div>
+
+                                <div>
+                                    <p className='text-xs mb-1 text-gray-600'>To</p>
+                                    <input
+                                        type='time'
+                                        className='border px-2 py-2 rounded w-full'
+                                        value={slotForm.to}
+                                        onChange={(e) => setSlotForm((prev) => ({ ...prev, to: e.target.value }))}
+                                    />
+                                </div>
+
+                                <div className='flex items-end'>
+                                    <button
+                                        type='button'
+                                        className='w-full py-2 rounded bg-main text-white hover:opacity-90 transition-all'
+                                        onClick={handleAddAvailability}
+                                    >
+                                        Add Slot
+                                    </button>
+                                </div>
+                            </div>
+
+                            {availabilityError && <p className='text-sm text-red-500 mt-3'>{availabilityError}</p>}
+
+                            <div className='mt-4'>
+                                {availabilityLoading ? (
+                                    <p className='text-sm text-gray-500'>Loading availability...</p>
+                                ) : availability.length === 0 ? (
+                                    <p className='text-sm text-gray-500'>No availability slots yet.</p>
+                                ) : (
+                                    <div className='space-y-2'>
+                                        {availability.map((slot) => (
+                                            <div key={slot._id} className='flex items-center justify-between border rounded px-3 py-2 bg-white'>
+                                                <p className='text-sm text-gray-700'>
+                                                    <span className='font-medium'>{toLabel(slot.day)}</span> — {slot.from} to {slot.to}
+                                                </p>
+                                                <button
+                                                    type='button'
+                                                    className='text-xs px-3 py-1 border border-red-300 text-red-600 rounded hover:bg-red-50'
+                                                    onClick={() => handleDeleteAvailability(slot._id)}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
                         <div className='mt-8'>
                             {editMode ? (

@@ -91,6 +91,8 @@ export const register = async (req, res, next) => {
           phone: phone || "",
           fees: fees ?? 0,
           experienceYears: experienceYears ?? 0,
+          status: "pending",
+          isApproved: false,
         });
       }
     } catch (profileError) {
