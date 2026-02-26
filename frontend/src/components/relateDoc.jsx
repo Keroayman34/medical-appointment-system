@@ -1,21 +1,20 @@
-import React , { useContext , useEffect , useState } from "react";
-import { appContext } from "../context/appContext.jsx";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux"; // نستخدم useSelector فقط لأن البيانات غالباً تم جلبها بالفعل
 import { useNavigate } from "react-router-dom";
 
-let RelateDoc = ({speciality,docID}) => {
-
-
-    let {doctors} = useContext(appContext);
-
-    let navg = useNavigate();
-    
-    let [relatedDocs, setRelatedDocs] = useState([]);
+let RelateDoc = ({ specialty, docID }) => {
+    const { doctors } = useSelector((state) => state.doctors);
+    const navg = useNavigate();
+    const [relatedDocs, setRelatedDocs] = useState([]);
 
     useEffect(() => {
-        let relatedDocs = doctors.filter(d => d.speciality === speciality && d._id !== parseInt(docID));
-        setRelatedDocs(relatedDocs);
-    }, [speciality, doctors, docID])
-
+        if (doctors.length > 0 && specialty) {
+            // فلترة الدكاترة حسب التخصص واستبعاد الدكتور الحالي
+            const filtered = doctors.filter(d => d.specialty === specialty && d._id !== docID);
+            setRelatedDocs(filtered);
+        }
+    }, [specialty, doctors, docID]);
+    
     return(
         <>
         <div className="flex flex-col items-center gap-4 my-16 text-gray-900 md:mx-10">

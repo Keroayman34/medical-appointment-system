@@ -1,11 +1,24 @@
-import React, { use } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
-import { appContext } from "../context/appContext";
-const TopDoc = () => {
+import { useSelector, useDispatch } from "react-redux";
+import { fetchDoctors } from "../redux/slices/doctorSlice";
 
-    let navg = useNavigate();
-    let {doctors} = useContext(appContext);
+const TopDoc = () => {
+    const navg = useNavigate();
+    const dispatch = useDispatch();
+
+    // جلب البيانات من Redux
+    const { doctors, loading, error } = useSelector((state) => state.doctors);
+
+    useEffect(() => {
+        // نطلب البيانات فقط إذا كانت القائمة فارغة
+        if (doctors.length === 0) {
+            dispatch(fetchDoctors());
+        }
+    }, [dispatch, doctors.length]);
+
+    if (loading) return <div className="text-center py-20">Loading Top Doctors...</div>;
+    if (error) return <div className="text-center py-20 text-red-500">Error: {error}</div>;
 
     return(
         <>

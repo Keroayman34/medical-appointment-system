@@ -1,15 +1,20 @@
-import React,{useState} from "react";
+import React,{useState , useSelector , useNavigate , useDispatch} from "react";
 
 let Login = () => {
-    let [state, setState] =useState("signUp");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { loading, error } = useSelector((state) => state.auth);
 
-    let [email, setEmail] = useState("");
-    let [password, setPassword] = useState("");
-    let [name, setName] = useState("");
-
-    let handleSubmit = async(e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-    }
+        dispatch(loginUser({ email, password })).then((result) => {
+            if (result.meta.requestStatus === 'fulfilled') {
+                navigate('/'); // روح للهوم لو السجل صح
+            }
+        });
+    };
 
     return(
         <>
@@ -18,14 +23,6 @@ let Login = () => {
                 <p className="text-2xl font-semibold">{state === "signUp" ? "Sign Up" : "Login"}</p>
 
                 <p>please fill in all fields</p>
-                {
-                    state === "signUp" &&
-                    <div className="w-full">
-                        <p>Name</p>
-                        <input className="border border-zinc-100 rounded w-full p-2 mt-1 " type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your name" required/>
-
-                    </div>
-                }
                 <div className="w-full">
 
                     <p>Email</p>
@@ -38,12 +35,8 @@ let Login = () => {
                     <input className="border border-zinc-100 rounded w-full p-2 mt-1 " type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required/>
 
                 </div>
-                <button className="bg-main text-white w-full py-2 rounded-md text-base">{state === "signUp" ? "Sign Up" : "Login"}</button>
-                {
-                    state === "signUp" 
-                    ? <p className="text-center">Already have an account? <span onClick={() => setState("login")} className="text-main cursor-pointer">Login</span></p> 
-                    : <p className="text-center">Don't have an account? <span onClick={() => setState("signUp")} className="text-main cursor-pointer">Sign Up</span></p>
-                }
+                <button className="bg-main text-white w-full py-2 rounded-md text-base">Login</button>
+                <p className="text-center">Don't have an account? <span onClick={() => navigate("/register")} className="text-main cursor-pointer">Sign Up</span></p>
             </div>
         </form>
         </>
