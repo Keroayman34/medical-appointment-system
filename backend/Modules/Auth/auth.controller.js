@@ -5,6 +5,13 @@ import { Patient } from "../../Database/Models/patient.model.js";
 import Doctor from "../../Database/Models/doctor.model.js";
 import Specialty from "../../Database/Models/specialty.model.js";
 
+const withDoctorPrefix = (name, role) => {
+  const cleanName = String(name || "").trim();
+  if (role !== "doctor" || !cleanName) return cleanName;
+  if (/^(dr\.?|doctor)\s+/i.test(cleanName)) return cleanName;
+  return `Dr. ${cleanName}`;
+};
+
 const generateToken = (user) => {
   return jwt.sign({ _id: user._id, role: user.role }, config.JWT_SECRET, {
     expiresIn: "7d",
@@ -53,10 +60,12 @@ export const register = async (req, res, next) => {
       return next(error);
     }
 
-    const selectedRole = role === "doctor" ? "doctor" : "patient";
+    const selectedRole = ["doctor", "admin", "patient"].includes(role)
+      ? role
+      : "patient";
 
     const user = await User.create({
-      name,
+      name: withDoctorPrefix(name, selectedRole),
       email,
       password,
       role: selectedRole,

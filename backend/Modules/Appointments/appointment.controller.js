@@ -3,19 +3,21 @@ import Doctor from "../../Database/Models/doctor.model.js";
 import { Patient } from "../../Database/Models/patient.model.js";
 import { notifyAppointmentParticipants } from "../../Utils/notification.service.js";
 
-const SLOT_BOOKED_MESSAGE = "المعاد محجوز";
+const SLOT_BOOKED_MESSAGE = "This time slot is already booked";
 
 const isDuplicateSlotError = (error) => {
   if (!error || error.code !== 11000) return false;
 
   const keyPattern = error.keyPattern || {};
+  const hasDoctorAndTime =
+    keyPattern.doctor === 1 && keyPattern.startTime === 1;
+  const hasDateKey = keyPattern.date === 1 || keyPattern.slotDate === 1;
   const indexName = String(error?.message || "");
 
   return (
-    (keyPattern.doctor === 1 &&
-      keyPattern.slotDate === 1 &&
-      keyPattern.startTime === 1) ||
-    indexName.includes("doctor_1_slotDate_1_startTime_1")
+    (hasDoctorAndTime && hasDateKey) ||
+    indexName.includes("doctor_1_slotDate_1_startTime_1") ||
+    indexName.includes("doctor_1_date_1_startTime_1")
   );
 };
 
@@ -187,7 +189,7 @@ export const getMyAppointments = async (req, res, next) => {
       .populate("patient", "name email")
       .populate({
         path: "doctor",
-        populate: { path: "user", select: "name email" },
+        populate: { path: "user", select: "name email image" },
       });
 
     return res.status(200).json({
@@ -234,7 +236,7 @@ export const getDoctorAppointmentsByView = async (req, res, next) => {
       })
       .populate({
         path: "doctor",
-        populate: { path: "user", select: "name email" },
+        populate: { path: "user", select: "name email image" },
       });
 
     return res.status(200).json({
@@ -487,7 +489,7 @@ export const getAllAppointments = async (req, res, next) => {
       .populate("patient", "name email")
       .populate({
         path: "doctor",
-        populate: { path: "user", select: "name email" },
+        populate: { path: "user", select: "name email image" },
       });
 
     return res.status(200).json({

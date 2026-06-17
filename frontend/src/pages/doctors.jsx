@@ -31,14 +31,14 @@ const Doctors = () => {
 
     return (
         <div className="p-5 max-w-7xl mx-auto">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center sm:text-left">
+            <h1 className="text-2xl font-bold text-[#355872] mb-6 text-center sm:text-left">
                 Browse Doctors by Specialty
             </h1>
 
             <div className="flex flex-wrap justify-center sm:justify-start gap-3 mb-10">
                 <button
                     onClick={() => navg('/doctors')}
-                    className={`px-4 py-2 rounded-full border text-sm transition-all ${!speciality ? 'bg-main text-white border-main' : 'bg-white text-gray-600 hover:border-main'}`}
+                    className={`px-4 py-2 rounded-full border text-sm transition-all ${!speciality ? 'bg-main text-white border-main' : 'bg-white text-[#355872]/75 border-[#7AAACE]/40 hover:border-main'}`}
                 >
                     All Doctors
                 </button>
@@ -46,7 +46,7 @@ const Doctors = () => {
                     <button
                         key={spec}
                         onClick={() => speciality === spec ? navg('/doctors') : navg(`/doctors/${spec}`)}
-                        className={`px-4 py-2 rounded-full border text-sm transition-all ${speciality === spec ? 'bg-main text-white border-main' : 'bg-white text-gray-600 hover:border-main'}`}
+                        className={`px-4 py-2 rounded-full border text-sm transition-all ${speciality === spec ? 'bg-main text-white border-main' : 'bg-white text-[#355872]/75 border-[#7AAACE]/40 hover:border-main'}`}
                     >
                         {spec}
                     </button>
@@ -57,12 +57,12 @@ const Doctors = () => {
                 {filteredDoctors.map((item) => (
                     <div
                         key={item._id}
-                        className="border border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:translate-y-[-5px] transition-all duration-300 bg-white"
+                        className="border border-[#7AAACE]/40 rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:translate-y-[-5px] transition-all duration-300 bg-white"
                     >
                         <div className="relative">
                             <img
                                 onClick={() => navg(`/appointment/${item._id}`)}
-                                className="w-full h-52 object-cover bg-indigo-50"
+                                className="w-full h-52 object-cover bg-[#9CD5FF]/15"
                                 src={item?.user?.image || asts.doc}
                                 alt={item?.user?.name || 'Doctor'}
                             />
@@ -72,7 +72,7 @@ const Doctors = () => {
                         </div>
 
                         <div className="p-5">
-                            <p onClick={() => navg(`/appointment/${item._id}`)} className="text-lg font-bold text-gray-900 truncate">{item?.user?.name || 'Doctor'}</p>
+                            <p onClick={() => navg(`/appointment/${item._id}`)} className="text-lg font-bold text-[#355872] truncate">{item?.user?.name || 'Doctor'}</p>
                             <p className="text-main text-xs font-semibold uppercase tracking-wider mb-3">{item?.specialty?.name || 'Specialty'}</p>
 
                             <button onClick={() => navg(`/appointment/${item._id}`)} className="w-full mt-2 py-2 border border-main text-main rounded-lg text-xs font-bold hover:bg-main hover:text-white transition-all">
@@ -85,7 +85,7 @@ const Doctors = () => {
 
             {filteredDoctors.length === 0 && (
                 <div className="text-center py-20">
-                    <p className="text-gray-400 text-lg">No doctors found.</p>
+                    <p className="text-[#355872]/60 text-lg">No doctors found.</p>
                 </div>
             )}
         </div>

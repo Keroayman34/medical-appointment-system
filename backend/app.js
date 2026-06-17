@@ -11,6 +11,7 @@ import appointmentRoutes from "./Modules/Appointments/appointment.routes.js";
 import specialtyRoutes from "./Modules/Specialties/specialty.routes.js";
 import userRoutes from "./Modules/User/user.routes.js";
 import notificationRoutes from "./Modules/Notifications/notification.routes.js";
+import adminRoutes from "./Modules/Admin/admin.routes.js";
 
 import { globalErrorHandler } from "./Middlewares/error.middleware.js";
 
@@ -51,6 +52,7 @@ app.use("/api/availability", availabilityRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/specialties", specialtyRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 app.use(globalErrorHandler);
 

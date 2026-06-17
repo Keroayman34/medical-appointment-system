@@ -12,6 +12,12 @@ const Nav = () => {
         isAuthenticated &&
         user?.role === 'admin' &&
         String(user?.id) === SUPER_ADMIN_ID;
+    const profileBadgeClasses =
+        user?.role === 'doctor'
+            ? 'bg-[#9CD5FF]/35 border-[#7AAACE]/70 text-[#1f4f73]'
+            : user?.role === 'admin'
+                ? 'bg-red-50 border-red-300 text-red-700'
+                : 'bg-white border-[#7AAACE]/40 text-[#355872]';
     const dispatch = useDispatch();
     const navg = useNavigate();
 
@@ -22,21 +28,24 @@ const Nav = () => {
 
     // دالة مساعدة لتنسيق الروابط النشطة
     const linkStyle = ({ isActive }) => (
-        isActive ? "py-1 border-b-2 border-main font-bold text-main" : "py-1 hover:text-main transition-all"
+        isActive
+            ? "px-3 py-2 rounded-full bg-main/10 text-main font-bold"
+            : "px-3 py-2 rounded-full text-[#355872] hover:bg-[#9CD5FF]/40 transition-all"
     );
 
     return (
-        <div className="flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400 bg-white sticky top-0 z-50">
+        <div className="sticky top-3 z-50 mb-6">
+            <div className="flex items-center justify-between text-sm px-4 py-3 rounded-2xl border border-[#7AAACE]/40 bg-[#F7F8F0]/95 backdrop-blur-md shadow-[0_8px_30px_rgba(53,88,114,0.12)]">
             {/* 1. اللوجو */}
             <img 
                 onClick={() => navg('/')} 
-                src={asts.logo} 
+                src="/vite.svg" 
                 alt="logo" 
-                className="w-40 cursor-pointer hover:opacity-80 transition-opacity" 
+                className="w-11 h-11 cursor-pointer hover:opacity-80 transition-opacity" 
             />
 
             {/* 2. القائمة الرئيسية (تتغير حسب الصلاحيات) */}
-            <ul className="hidden md:flex items-start gap-6 font-medium uppercase tracking-wider">
+            <ul className="hidden md:flex items-start gap-2 font-semibold tracking-wide">
                 <NavLink to="/" className={linkStyle}><li>Home</li></NavLink>
                 <NavLink to="/doctors" className={linkStyle}><li>All Doctors</li></NavLink>
 
@@ -51,7 +60,7 @@ const Nav = () => {
                 {/* روابط الأدمن فقط */}
                 {isSuperAdmin && (
                     <>
-                        <NavLink to="/admin-dashboard" className={linkStyle}><li className="text-main font-bold italic">Admin Panel</li></NavLink>
+                        <NavLink to="/admin-dashboard" className={linkStyle}><li className="text-main font-bold">Admin Panel</li></NavLink>
                         <NavLink to="/add-doctor" className={linkStyle}><li>Add Doctor</li></NavLink>
                     </>
                 )}
@@ -61,40 +70,41 @@ const Nav = () => {
             <div className="flex items-center gap-4">
                 {isAuthenticated ? (
                     <div className="flex items-center gap-2 cursor-pointer group relative">
-                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm ${profileBadgeClasses}`}>
                             <img className="w-8 h-8 rounded-full object-cover" src={user?.image || asts.prof} alt="profile" />
-                            <span className="text-xs font-bold text-gray-700 hidden sm:block">Hi, {user?.name?.split(' ')[0]}</span>
+                            <span className="text-xs font-bold hidden sm:block">Hi, {user?.name?.split(' ')[0]}</span>
                             <img className="w-2.5" src={asts.dropdown_icon} alt="" />
                         </div>
                         
                         {/* القائمة المنسدلة (Dropdown) */}
                         <div className="absolute top-full right-0 pt-2 text-base font-medium text-gray-600 z-50 hidden group-hover:block transition-all animate-fadeIn">
-                            <div className="min-w-56 bg-white rounded-lg flex flex-col gap-1 p-2 shadow-xl border border-gray-100">
+                            <div className="min-w-56 bg-white rounded-xl flex flex-col gap-1 p-2 shadow-xl border border-[#7AAACE]/30">
                                 
                                 {/* لو دكتور يروح لبروفايل الدكتور، لو مريض يروح للبروفايل الشخصي */}
                                 {user?.role === 'doctor' ? (
-                                    <p onClick={() => navg('/doctor-profile')} className="hover:bg-gray-100 p-3 rounded cursor-pointer font-bold text-green-600">My Doctor Profile</p>
+                                    <p onClick={() => navg('/doctor-profile')} className="hover:bg-[#9CD5FF]/30 p-3 rounded-lg cursor-pointer font-bold text-main">My Doctor Profile</p>
                                 ) : (
-                                    <p onClick={() => navg('/profile')} className="hover:bg-gray-100 p-3 rounded cursor-pointer">My Profile</p>
+                                    <p onClick={() => navg('/profile')} className="hover:bg-[#9CD5FF]/30 p-3 rounded-lg cursor-pointer">My Profile</p>
                                 )}
 
                                 {/* رابط مواعيد المريض يظهر للمريض فقط */}
                                 {user?.role === 'patient' && (
-                                    <p onClick={() => navg('/my-appointments')} className="hover:bg-gray-100 p-3 rounded cursor-pointer">My Appointments</p>
+                                    <p onClick={() => navg('/my-appointments')} className="hover:bg-[#9CD5FF]/30 p-3 rounded-lg cursor-pointer">My Appointments</p>
                                 )}
 
                                 <hr className="my-1 border-gray-100" />
-                                <p onClick={handleLogout} className="hover:bg-red-50 p-3 rounded cursor-pointer text-red-500 font-bold">Logout</p>
+                                <p onClick={handleLogout} className="hover:bg-red-50 p-3 rounded-lg cursor-pointer text-red-500 font-bold">Logout</p>
                             </div>
                         </div>
                     </div>
                 ) : (
                     <div className="flex items-center gap-3">
-                         <button onClick={() => navg('/login')} className="text-gray-600 font-medium px-4 py-2 hover:text-main transition-colors">Login</button>
-                         <button onClick={() => navg('/register')} className="bg-main text-white px-8 py-2.5 rounded-full hidden md:block hover:shadow-lg transition-all active:scale-95">Create Account</button>
+                        <button type="button" onClick={() => navg('/login')} className="text-[#355872] font-semibold px-4 py-2 rounded-full hover:bg-[#9CD5FF]/35 transition-colors">Login</button>
+                        <button type="button" onClick={() => navg('/register')} className="bg-main text-white px-8 py-2.5 rounded-full hidden md:block hover:shadow-lg hover:bg-[#2c4960] transition-all active:scale-95">Create Account</button>
                     </div>
                 )}
             </div>
+        </div>
         </div>
     );
 }

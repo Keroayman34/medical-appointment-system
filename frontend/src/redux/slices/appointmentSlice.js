@@ -3,12 +3,11 @@ import axios from "axios";
 
 const APPOINTMENTS_API = "/api/appointments";
 
-// 1. أكشن لحجز موعد جديد
 export const bookAppointment = createAsyncThunk(
   "appointments/book",
   async (appointmentData, { getState, rejectWithValue }) => {
     try {
-      const { auth } = getState(); // جلب التوكن من الـ auth slice
+      const { auth } = getState(); 
       const config = {
         headers: {
           Authorization: `Bearer ${auth.token}`,

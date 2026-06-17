@@ -2,11 +2,8 @@ import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-// استيراد المكتبة الخاصة بالإشعارات
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-// استيراد الصفحات الأساسية
 import Home from "./pages/home.jsx";
 import Doctors from "./pages/doctors.jsx"; 
 import Login from "./pages/login.jsx";
@@ -17,14 +14,12 @@ import Appointments from "./pages/appointments.jsx";
 import Appoint from "./pages/appoint.jsx";
 import Register from "./pages/register.jsx";
 
-// استيراد صفحات الطبيب والأدمن
 import DoctorDashboard from "./pages/doctorDashboard.jsx";
 import DoctorAppointments from "./pages/doctorAppointments.jsx";
 import DoctorProfile from "./pages/doctorProfile.jsx";
 import AddDoctor from "./pages/addDoctor.jsx";
 import AdminDashboard from "./pages/adminDasboard.jsx"; 
 
-// استيراد المكونات
 import Nav from "./components/Nav.jsx";
 import Footer from "./components/footer.jsx";
 

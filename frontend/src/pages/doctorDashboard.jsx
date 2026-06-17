@@ -25,14 +25,14 @@ const DoctorDashboard = () => {
             </div>
 
             {/* أحدث الحجوزات */}
-            <div className='bg-white mt-10 rounded border shadow-sm'>
-                <div className='flex items-center gap-2.5 px-4 py-4 border-b bg-gray-50'>
+            <div className='bg-[#F7F8F0]/95 mt-10 rounded-2xl border border-[#7AAACE]/40 shadow-sm'>
+                <div className='flex items-center gap-2.5 px-4 py-4 border-b border-[#9CD5FF]/50 bg-[#F7F8F0]'>
                     <img src={asts.list_icon} alt="" />
-                    <p className='font-semibold'>Latest Appointments</p>
+                    <p className='font-bold text-[#355872] text-2xl'>Latest Appointments</p>
                 </div>
 
-                <div className='pt-4 border-b bg-white'>
-                    {appointments.slice(0, 5).map((item, index) => (
+                <div className='pt-2 border-b border-[#9CD5FF]/50 bg-[#F7F8F0]/85'>
+                    {appointments.length > 0 ? appointments.slice(0, 5).map((item, index) => (
                         <AppointmentRow 
                             key={index} 
                             item={item} 
@@ -40,7 +40,9 @@ const DoctorDashboard = () => {
                             onComplete={(id) => dispatch(completeAppointment(id))}
                             onCancel={(id) => dispatch(cancelDoctorAppointment(id))}
                         />
-                    ))}
+                    )) : (
+                        <p className='px-5 py-8 text-[#355872]/70'>No appointments yet.</p>
+                    )}
                 </div>
             </div>
         </div>

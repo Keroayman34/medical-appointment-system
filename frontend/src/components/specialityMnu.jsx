@@ -5,9 +5,9 @@ import { Link } from "react-router-dom";
 const SpecialityMnu = () => {
     return(
         <>
-        <div id="speciality" className="flex flex-col items-center gap-4 py-16 text-gray-800">
-            <h1 className="text-3xl font-bold">Find your speciality</h1>
-            <p className="sm:w-1/3 text-center text-sm">uvdsjhkbailakjbnlikbnsdkjiakjsbiikjba ijsbjb ikvjbv iusjbvsdh iuiaslololhbidbja ibsvdaiyvs viuadfbakbja isuajbka </p>
+        <div id="speciality" className="flex flex-col items-center gap-4 py-16 text-[#355872]">
+            <h1 className="text-3xl md:text-4xl font-bold text-[#355872]">Find Your Specialty</h1>
+            <p className="sm:w-2/3 text-center text-sm text-[#355872]/85 leading-relaxed">Discover the perfect specialty that matches your passion and skills. Our platform helps you explore different fields easily and guides you to choose the best path for your future. Whether you're a beginner or looking to improve your career, we provide the tools and support you need to succeed.</p>
 
             <div className="flex sm:justify-center gap-4 pt-5 w-full overflow-scroll">
                 {specialityData.map((item, index) => (

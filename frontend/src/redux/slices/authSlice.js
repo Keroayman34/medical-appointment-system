@@ -10,7 +10,8 @@ const normalizeValidationMessage = (message = "") => {
   if (/"email"\s+is\s+required/i.test(text)) return "Email is required.";
   if (/"password"\s+is\s+required/i.test(text)) return "Password is required.";
   if (/"name"\s+is\s+required/i.test(text)) return "Name is required.";
-  if (/"specialtyId"\s+is\s+required/i.test(text)) return "Please select a specialty.";
+  if (/"specialtyId"\s+is\s+required/i.test(text))
+    return "Please select a specialty.";
   if (/"email"\s+must\s+be\s+a\s+valid\s+email/i.test(text)) {
     return "Please enter a valid email address.";
   }
@@ -130,7 +131,9 @@ export const fetchMyAppointments = createAsyncThunk(
       const response = await axios.get(`${USER_API}/appointments`, config);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch",
+      );
     }
   },
 );
@@ -142,7 +145,11 @@ export const cancelAppointment = createAsyncThunk(
     try {
       const { auth } = getState();
       const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-      await axios.post(`${USER_API}/cancel-appointment`, { appointmentId }, config);
+      await axios.post(
+        `${USER_API}/cancel-appointment`,
+        { appointmentId },
+        config,
+      );
       return appointmentId;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Cancel failed");
@@ -170,7 +177,7 @@ const authSlice = createSlice({
     // دالة تنظيف الخطأ ضرورية لمسح الرسائل القديمة من الإشعارات
     clearError: (state) => {
       state.error = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -195,19 +202,22 @@ const authSlice = createSlice({
         state.loading = false;
       })
       .addCase(cancelAppointment.fulfilled, (state, action) => {
+        state.loading = false;
         state.appointments = state.appointments.map((item) =>
           item._id === action.payload ? { ...item, cancelled: true } : item,
         );
       })
       .addMatcher(
-        (action) => action.type.endsWith("/pending"),
+        (action) =>
+          action.type.startsWith("auth/") && action.type.endsWith("/pending"),
         (state) => {
           state.loading = true;
           state.error = null;
         },
       )
       .addMatcher(
-        (action) => action.type.endsWith("/rejected"),
+        (action) =>
+          action.type.startsWith("auth/") && action.type.endsWith("/rejected"),
         (state, action) => {
           state.loading = false;
           state.error = action.payload;

@@ -8,7 +8,7 @@ export const registerSchema = Joi.object({
 
   password: Joi.string().min(6).required(),
 
-  role: Joi.string().valid("patient", "doctor").optional(),
+  role: Joi.string().valid("patient", "doctor", "admin").optional(),
 
   phone: Joi.string().trim().allow("").optional(),
 

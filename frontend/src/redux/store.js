@@ -10,6 +10,5 @@ export const store = configureStore({
     doctors: doctorReducer,
     appointment: appointmentReducer,
     admin: adminReducer,
-    // هنا هنضيف باقي الـ slices زي الدكاترة والمواعيد بعدين
   },
 });

@@ -6,6 +6,7 @@ import { bookAppointment } from "../redux/slices/appointmentSlice";
 import { asts } from "../assets/assets.js";
 import RelateDoc from "../components/relateDoc.jsx";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const Appoint = () => {
     const { docID } = useParams();
@@ -22,6 +23,15 @@ const Appoint = () => {
     const [slotIndex, setSlotIndex] = useState(0);
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [occupiedSet, setOccupiedSet] = useState(new Set());
+
+    const dayTimeline = Array.from({ length: 7 }, (_, index) => {
+        const dateObj = new Date();
+        dateObj.setDate(dateObj.getDate() + index);
+        return {
+            shortDay: dayNames[dateObj.getDay()].substring(0, 3),
+            date: dateObj.getDate(),
+        };
+    });
 
     useEffect(() => {
         dispatch(fetchDoctorById(docID));
@@ -138,14 +148,21 @@ const Appoint = () => {
 
     const handleBooking = async () => {
         if (!token) {
-            alert("Please login to book an appointment");
+            toast.info("Please login to book an appointment");
             return navg('/login');
         }
         if (!isPatient) {
-            return alert("Booking is allowed for patients only");
+            toast.warning("Booking is allowed for patients only");
+            return;
         }
-        if (!selectedSlot) return alert("Please select a time slot");
-        if (selectedSlot.isBooked) return alert("This slot is already booked");
+        if (!selectedSlot) {
+            toast.warning("Please select a time slot");
+            return;
+        }
+        if (selectedSlot.isBooked) {
+            toast.error("This slot is already booked");
+            return;
+        }
 
         const appointmentData = {
             doctorId: docID,
@@ -157,12 +174,12 @@ const Appoint = () => {
         const result = await dispatch(bookAppointment(appointmentData));
         if (result.meta.requestStatus === "fulfilled") {
             setOccupiedSet((prev) => new Set(prev).add(`${selectedSlot.date}_${selectedSlot.startTime}`));
-            alert("Appointment booked successfully");
+            toast.success("Appointment booked successfully");
             navg("/my-appointments");
             return;
         }
 
-        alert(result.payload || "Could not book this slot");
+        toast.error(result.payload || "Could not book this slot");
     };
 
     if (loading || !selectedDoctor) return <p className="text-center py-20">Loading...</p>;
@@ -173,44 +190,44 @@ const Appoint = () => {
             <div className="flex flex-col sm:flex-row gap-4">
                 <div>
                     {/* استخدمنا الصورة من السيرفر أو صورة افتراضية */}
-                    <img className="w-full sm:max-w-72 rounded-lg bg-main" src={selectedDoctor.image || asts.doc} alt="" />
+                    <img className="w-full sm:max-w-72 rounded-2xl bg-[#7AAACE]/35 border border-[#7AAACE]/30 shadow-md" src={selectedDoctor.image || selectedDoctor.user?.image || asts.doc} alt="" />
                 </div>
 
-                <div className="flex-1 border border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sm:mx-0 mt-[-80px] sm:mt-0">
-                    <p className="flex items-center gap-2 text-2xl font-medium text-gray-900">
+                <div className="flex-1 border border-[#7AAACE]/40 rounded-2xl p-8 py-7 bg-[#F7F8F0]/90 shadow-md mx-2 sm:mx-0 mt-[-80px] sm:mt-0">
+                    <p className="flex items-center gap-2 text-2xl font-bold text-[#355872]">
                         {selectedDoctor.user?.name}
                         <img className="w-5" src={asts.verf} alt="" />
                     </p>
 
-                    <div className="flex items-center gap-2 text-sm mt-1 text-gray-600">
+                    <div className="flex items-center gap-2 text-sm mt-1 text-[#355872]/85">
                         <p>{selectedDoctor.degree || 'MBBS'} - {selectedDoctor.specialty?.name || selectedDoctor.specialty || 'Specialty'}</p>
-                        <button className="py-0.5 px-2 border text-xs rounded-full">{selectedDoctor.experienceYears} Years Exp</button>
+                        <button className="py-0.5 px-2 border border-[#7AAACE]/40 text-xs rounded-full bg-white/80">{selectedDoctor.experienceYears} Years Exp</button>
                     </div>
 
                     <div className="mt-3">
-                        <p className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                        <p className="flex items-center gap-1 text-sm font-semibold text-[#355872]">
                             about <img src={asts.info} alt="" />
                         </p>
-                        <p className="text-sm text-gray-500 max-w-[700px] mt-1">{selectedDoctor.bio}</p>
+                        <p className="text-sm text-[#355872]/80 max-w-[700px] mt-1">{selectedDoctor.bio}</p>
                     </div>
-                    <p className="text-gray-500 mt-4 font-medium">fee: <span className="text-gray-600">${selectedDoctor.fees}</span></p>
+                    <p className="text-[#355872]/80 mt-4 font-medium">fee: <span className="text-[#355872] font-bold">${selectedDoctor.fees}</span></p>
                 </div>
             </div>
 
-            <div className="sm:ml-72 sm:pl-6 mt-6 font-medium text-gray-700">
-                <p>Booking Times</p>
+            <div className="sm:ml-72 sm:pl-6 mt-6 font-medium text-[#355872]">
+                <p className="text-xl font-bold">Booking Times</p>
                 
                 {/* اختيار الأيام */}
                 <div className="flex gap-3 items-center w-full overflow-x-scroll mt-4 pb-2">
-                    {docSlots.length > 0 && docSlots.map((daySlots, index) => (
+                    {dayTimeline.map((dayItem, index) => (
                         <div 
                             key={index} 
                             onClick={() => setSlotIndex(index)} 
-                            className={`text-center py-6 min-w-16 rounded-full cursor-pointer transition-all ${slotIndex === index ? 'bg-main text-white shadow-md' : 'border border-gray-200 hover:bg-gray-50'}`}
+                            className={`text-center py-5 min-w-16 rounded-full cursor-pointer transition-all border ${slotIndex === index ? 'bg-main text-white border-main shadow-md' : 'border-[#9CD5FF] bg-white/60 text-[#355872] hover:bg-[#9CD5FF]/25'}`}
                         >
                             {/* عرض اسم اليوم ورقمه */}
-                            <p>{daySlots[0] && dayNames[daySlots[0].dateObj.getDay()].substring(0, 3)}</p>
-                            <p>{daySlots[0] && daySlots[0].dateObj.getDate()}</p>
+                            <p>{dayItem.shortDay}</p>
+                            <p>{dayItem.date}</p>
                         </div>
                     ))}
                 </div>
@@ -222,14 +239,14 @@ const Appoint = () => {
                                 type="button"
                                 key={index} 
                                 onClick={() => !slot.isBooked && setSelectedSlot(slot)}
-                                className={`text-sm font-light flex-shrink-0 px-4 py-2 rounded-full transition-all border flex items-center gap-2 ${slot.isBooked ? 'text-red-500 border-red-300 bg-red-50 cursor-not-allowed' : selectedSlot?.date === slot.date && selectedSlot?.startTime === slot.startTime ? 'bg-main text-white border-main shadow-sm' : 'text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                                className={`text-sm font-light flex-shrink-0 px-4 py-2 rounded-full transition-all border flex items-center gap-2 ${slot.isBooked ? 'text-red-600 border-red-300 bg-red-50 cursor-not-allowed' : selectedSlot?.date === slot.date && selectedSlot?.startTime === slot.startTime ? 'bg-main text-white border-main shadow-sm' : 'text-[#355872] border-[#9CD5FF] bg-white/70 hover:bg-[#9CD5FF]/25'}`}
                             >
                                 <span className={`w-2.5 h-2.5 rounded-full ${slot.isBooked ? 'bg-red-500' : 'bg-green-500'}`}></span>
                                 <span>{slot.displayTime}</span>
                             </button>
                         ))
                     ) : (
-                        <p className="text-sm text-red-400 py-4">No slots available for this day.</p>
+                        <p className="text-sm text-red-500 py-4">No slots available for this day.</p>
                     )}
                 </div>
 
@@ -249,7 +266,7 @@ const Appoint = () => {
                 <button 
                     onClick={handleBooking} 
                     disabled={token && !isPatient}
-                    className={`my-6 px-14 py-3 text-sm font-light rounded-full transition-all ${token && !isPatient ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-main text-white hover:scale-105'}`}
+                    className={`my-6 px-14 py-3 text-sm font-semibold rounded-full transition-all ${token && !isPatient ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-main text-white hover:scale-105 hover:shadow-lg'}`}
                 >
                     Book Appointment
                 </button>

@@ -1,16 +1,64 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-*{
-    font-family: Merriweather;
+:root {
+  --bg-soft: #f7f8f0;
+  --bg-accent: #9cd5ff;
+  --bg-accent-2: #7aaace;
+  --text-main: #355872;
+  --text-muted: #355872;
 }
 
-.active hr{
-    @apply block;
-} 
+* {
+  box-sizing: border-box;
+}
 
-::-webkit-scrollbar{
-    @apply hidden;
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Tajawal", sans-serif;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at 15% 10%, var(--bg-accent) 0%, transparent 45%),
+    radial-gradient(circle at 85% 0%, var(--bg-accent-2) 0%, transparent 40%),
+    var(--bg-soft);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Cairo", sans-serif;
+  letter-spacing: 0.2px;
+}
+
+p,
+span,
+label,
+input,
+select,
+textarea,
+button,
+a,
+li {
+  font-family: "Tajawal", sans-serif;
+}
+
+.active hr {
+  @apply block;
+}
+
+::-webkit-scrollbar {
+  @apply hidden;
 }

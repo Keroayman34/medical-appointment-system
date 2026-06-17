@@ -9,11 +9,7 @@ import {
   rejectDoctor,
   deleteDoctorByAdmin,
 } from "./doctor.controller.js";
-import {
-  protect,
-  allowRoles,
-  allowSuperAdmin,
-} from "../../Middlewares/auth.middleware.js";
+import { protect, allowRoles } from "../../Middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -25,11 +21,11 @@ router.patch("/me", protect, allowRoles("doctor"), updateMyDoctorProfile);
 
 router.get("/discover", discoverDoctors);
 
-router.get("/pending", protect, allowSuperAdmin(), getPendingDoctors);
+router.get("/pending", protect, allowRoles("admin"), getPendingDoctors);
 
-router.patch("/:id/approve", protect, allowSuperAdmin(), approveDoctor);
+router.patch("/:id/approve", protect, allowRoles("admin"), approveDoctor);
 
-router.patch("/:id/reject", protect, allowSuperAdmin(), rejectDoctor);
+router.patch("/:id/reject", protect, allowRoles("admin"), rejectDoctor);
 
 router.delete("/:id", protect, allowRoles("admin"), deleteDoctorByAdmin);
 

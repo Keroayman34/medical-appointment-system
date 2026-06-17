@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-// تأكد إنك ضفت cancelAppointment في الـ Slice بتاعك
 import { fetchDoctorAppointments, completeAppointment, cancelDoctorAppointment } from '../redux/slices/doctorSlice' 
 import { asts } from '../assets/assets'
 
@@ -12,7 +11,6 @@ const DoctorAppointments = () => {
     dispatch(fetchDoctorAppointments())
   }, [dispatch])
 
-  // دالة بسيطة لحساب السن من تاريخ الميلاد
   const calculateAge = (dob) => {
     if (!dob) return "N/A";
     if (typeof dob === 'number') return dob;
@@ -26,11 +24,11 @@ const DoctorAppointments = () => {
 
   return (
     <div className='w-full max-w-6xl m-5'>
-      <p className='mb-3 text-lg font-medium text-zinc-700'>All Appointments</p>
+      <p className='mb-3 text-3xl font-bold text-[#355872]'>All Appointments</p>
 
-      <div className='bg-white border rounded text-sm max-h-[80vh] min-h-[60vh] overflow-y-scroll shadow-sm'>
+      <div className='bg-[#F7F8F0]/95 border border-[#7AAACE]/40 rounded-2xl text-sm max-h-[80vh] min-h-[60vh] overflow-y-scroll shadow-sm'>
         {/* رأس الجدول */}
-        <div className='max-sm:hidden grid grid-cols-[0.5fr_3fr_1fr_3fr_1fr_1fr] grid-flow-col py-3 px-6 border-b bg-gray-50 text-gray-700 font-semibold'>
+        <div className='max-sm:hidden grid grid-cols-[0.5fr_3fr_1fr_3fr_1fr_1fr] grid-flow-col py-3 px-6 border-b border-[#9CD5FF]/45 bg-[#F7F8F0] text-[#355872] font-bold'>
           <p>#</p>
           <p>Patient</p>
           <p>Payment</p>
@@ -42,55 +40,68 @@ const DoctorAppointments = () => {
         {/* عرض المواعيد */}
         {appointments && appointments.length > 0 ? (
           appointments.map((item, index) => (
-            <div className='flex flex-wrap justify-between sm:grid grid-cols-[0.5fr_3fr_1fr_3fr_1fr_1fr] items-center text-gray-500 py-3 px-6 border-b hover:bg-gray-50 transition-all' key={index}>
+            <div className='flex flex-wrap justify-between sm:grid grid-cols-[0.5fr_3fr_1fr_3fr_1fr_1fr] items-center text-[#355872]/85 py-3 px-6 border-b border-[#9CD5FF]/45 hover:bg-[#9CD5FF]/18 transition-all' key={index}>
               <p className='max-sm:hidden'>{index + 1}</p>
               
               <div className='flex items-center gap-2'>
-                {/* استخدام صورة افتراضية لو المريض محطش صورة */}
-                <img className='w-8 h-8 rounded-full object-cover' src={asts.prof} alt="" />
-                <p className='text-zinc-800 font-medium'>{item.patient?.user?.name || "Unknown Patient"}</p>
+                {/* Use patient image when available, otherwise fallback */}
+                <img
+                  className='w-10 h-10 rounded-full object-cover border border-[#9CD5FF]/60'
+                  src={item.patient?.user?.image || asts.prof}
+                  alt='Patient'
+                  onError={(e) => {
+                    e.currentTarget.src = asts.prof
+                  }}
+                />
+                <p className='text-[#355872] font-semibold'>{item.patient?.user?.name || "Unknown Patient"}</p>
               </div>
 
               <div>
-                <p className='text-xs inline border border-main px-2 py-0.5 rounded-full text-main font-medium'>
+                <p className='text-xs inline border border-main/30 bg-main/10 px-2 py-0.5 rounded-full text-main font-semibold'>
                   Cash
                 </p>
               </div>
 
-              <div className='text-zinc-600'>
+              <div className='text-[#355872]/80'>
                 <p>{calculateAge(item.patient?.age)} Years</p>
                 <p className='text-xs'>
                   {new Date(item.date).toLocaleDateString('en-GB')}, {item.startTime}
                 </p>
               </div>
 
-              <p className='font-bold text-zinc-700'>${item.doctor?.fees ?? '-'}</p>
+              <p className='font-bold text-[#355872]'>${item.doctor?.fees ?? '-'}</p>
               
               <div className='flex gap-2 items-center'>
                 {item.status === 'cancelled' 
-                  ? <p className='text-red-400 text-xs font-medium bg-red-50 px-2 py-1 rounded'>Cancelled</p>
+                  ? <p className='text-red-600 text-xs font-medium bg-red-50 px-2 py-1 rounded'>Cancelled</p>
                   : item.status === 'completed' 
-                    ? <p className='text-green-500 text-xs font-medium bg-green-50 px-2 py-1 rounded'>Completed</p>
+                    ? <p className='text-green-600 text-xs font-medium bg-green-50 px-2 py-1 rounded'>Completed</p>
                     : <>
-                        <img 
-                          onClick={() => dispatch(completeAppointment(item._id))} 
-                          className='w-10 cursor-pointer p-2 bg-green-50 rounded-full hover:scale-110 transition-all' 
-                          src={asts.tick_icon} 
-                          alt="Complete" 
-                        />
-                        <img 
+                        <button
+                          type='button'
+                          onClick={() => dispatch(completeAppointment(item._id))}
+                          className='w-10 h-10 cursor-pointer bg-green-50 border border-green-200 rounded-full hover:scale-110 transition-all text-green-600 text-lg font-bold flex items-center justify-center'
+                          aria-label='Complete appointment'
+                          title='Complete appointment'
+                        >
+                          ✓
+                        </button>
+                        <button
+                          type='button'
                           onClick={() => dispatch(cancelDoctorAppointment(item._id))}
-                          className='w-10 cursor-pointer p-2 bg-red-50 rounded-full hover:scale-110 transition-all' 
-                          src={asts.cancel_icon} 
-                          alt="Cancel" 
-                        />
+                          className='w-10 h-10 cursor-pointer bg-red-50 border border-red-200 rounded-full hover:scale-110 transition-all text-red-600 text-lg font-bold flex items-center justify-center'
+                          aria-label='Cancel appointment'
+                          title='Cancel appointment'
+                        >
+                          ✕
+                        </button>
                       </>
                 }
               </div>
             </div>
           ))
         ) : (
-          <div className='text-center py-20 text-gray-400'>No appointments found.</div>
+          <div className='text-center py-20 text-[#355872]/60'>No appointments found.</div>
         )}
       </div>
     </div>

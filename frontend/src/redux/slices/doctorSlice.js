@@ -2,10 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-// استخدام المسار النسبي ليعمل مع Vite Proxy
 const API_BASE_URL = "/api/doctors";
 
-// 1. جلب كل الدكاترة (للمرضى)
 export const fetchDoctors = createAsyncThunk(
   "doctor/fetchAll",
   async (_, { rejectWithValue }) => {
@@ -20,7 +18,6 @@ export const fetchDoctors = createAsyncThunk(
   },
 );
 
-// 2. جلب بيانات دكتور واحد بالـ ID
 export const fetchDoctorById = createAsyncThunk(
   "doctor/fetchById",
   async (docId, { rejectWithValue }) => {

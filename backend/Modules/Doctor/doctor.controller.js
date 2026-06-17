@@ -199,7 +199,7 @@ export const discoverDoctors = async (req, res, next) => {
     }
 
     let doctors = await Doctor.find(filter)
-      .populate("user", "name email")
+      .populate("user", "name email image")
       .populate("specialty", "name description")
       .sort({ rating: -1, createdAt: -1 });
 
@@ -232,7 +232,7 @@ export const getPendingDoctors = async (req, res, next) => {
         { status: { $exists: false }, isApproved: false },
       ],
     })
-      .populate("user", "name email")
+      .populate("user", "name email image")
       .populate("specialty", "name description");
     res.status(200).json(doctors);
   } catch (error) {
@@ -264,7 +264,10 @@ export const approveDoctor = async (req, res, next) => {
         to: doctor.user.email,
         recipientName: doctor.user.name,
       }).catch((emailError) => {
-        console.error("Failed to send doctor approval email:", emailError.message);
+        console.error(
+          "Failed to send doctor approval email:",
+          emailError.message,
+        );
       });
     }
 

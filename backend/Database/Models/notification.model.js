@@ -27,7 +27,6 @@ const notificationSchema = new mongoose.Schema(
         "appointment_cancelled",
         "appointment_rescheduled",
         "appointment_status_updated",
-        "consultation_notes_added",
         "general",
       ],
       default: "general",
