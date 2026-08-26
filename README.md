@@ -320,13 +320,3 @@ This project is open-source and available under the MIT License.
 ## ⭐ Final Note
 
 This project demonstrates a real-world scalable backend system with clean architecture, modular design, and secure API implementation suitable for production-level applications.
-
----
-
-🔥 لو حابب تزودها كمان Level أعلى (GitHub Pro):
-
-* Badges (build, license, tech icons)
-* API docs بـ Swagger
-* صور UI
-
-قولّي وأنا أعمل لك Version أقوى كمان 💪
